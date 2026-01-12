@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import JobLogList from "./JobLogList";
 
 const statusColors = {
   todo: "bg-gray-500/20 text-gray-600 dark:text-gray-400",
@@ -19,7 +20,27 @@ function formatDate(dateStr) {
   });
 }
 
-function ApplicationDetail({ item, onEdit, onDelete, onViewLogs }) {
+// Format salary with comma separators
+function formatSalary(salaryStr) {
+  if (!salaryStr) return "";
+  // Handle range format like "100000-150000" or "100000 - 150000"
+  const parts = salaryStr.split(/\s*[-–]\s*/);
+  const formatted = parts.map(part => {
+    // Extract numbers and format them
+    const num = part.replace(/[^0-9]/g, "");
+    if (num) {
+      const formatted = parseInt(num, 10).toLocaleString("en-US");
+      // Preserve any prefix like $ or currency
+      const prefix = part.match(/^[^0-9]*/)?.[0] || "";
+      const suffix = part.match(/[^0-9]*$/)?.[0] || "";
+      return prefix + formatted + suffix;
+    }
+    return part;
+  });
+  return formatted.join(" - ");
+}
+
+function ApplicationDetail({ item, onEdit, onDelete }) {
   return (
     <div className="space-y-4">
       <div className="flex items-start justify-between">
@@ -43,7 +64,7 @@ function ApplicationDetail({ item, onEdit, onDelete, onViewLogs }) {
         )}
         {item.salary_range && (
           <div>
-            <span className="text-muted-foreground">Salary:</span> {item.salary_range}
+            <span className="text-muted-foreground">Salary:</span> {formatSalary(item.salary_range)}
           </div>
         )}
         {item.email && (
@@ -70,46 +91,6 @@ function ApplicationDetail({ item, onEdit, onDelete, onViewLogs }) {
         <Button size="sm" variant="outline" onClick={onEdit}>
           Edit
         </Button>
-        <Button size="sm" variant="outline" onClick={() => onViewLogs(item)}>
-          View Logs
-        </Button>
-        <Button size="sm" variant="destructive" onClick={onDelete}>
-          Delete
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function LogDetail({ item, parentApplication, onEdit, onDelete }) {
-  return (
-    <div className="space-y-4">
-      <div>
-        <p className="text-xs text-muted-foreground mb-1">Log for: {parentApplication?.company_name}</p>
-        <h3 className="text-lg font-semibold">{item.process_name}</h3>
-        <p className="text-xs text-muted-foreground">{formatDate(item.created_at)}</p>
-      </div>
-
-      {item.note && (
-        <div>
-          <span className="text-sm text-muted-foreground">Note:</span>
-          <p className="text-sm mt-1 whitespace-pre-wrap bg-muted/50 rounded-md p-2">{item.note}</p>
-        </div>
-      )}
-
-      {item.audio_url && (
-        <div>
-          <span className="text-sm text-muted-foreground">Audio Recording:</span>
-          <audio controls className="w-full mt-1">
-            <source src={item.audio_url} />
-          </audio>
-        </div>
-      )}
-
-      <div className="flex gap-2 pt-2 border-t border-border">
-        <Button size="sm" variant="outline" onClick={onEdit}>
-          Edit
-        </Button>
         <Button size="sm" variant="destructive" onClick={onDelete}>
           Delete
         </Button>
@@ -119,38 +100,43 @@ function LogDetail({ item, parentApplication, onEdit, onDelete }) {
 }
 
 export default function DetailPanel({
-  selectedItem,
-  selectedType,
-  parentApplication,
+  selectedApplication,
+  logs = [],
   onEdit,
   onDelete,
-  onViewLogs,
+  onAddLog,
+  onUpdateLog,
+  isLoading = false,
 }) {
-  if (!selectedItem) {
+  if (!selectedApplication) {
     return (
       <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-        Select an item to view details
+        Select an application to view details
       </div>
     );
   }
 
   return (
-    <div className="p-4 h-full overflow-y-auto">
-      {selectedType === "application" ? (
+    <div className="flex flex-col h-full">
+      {/* Application Details - Fixed top section */}
+      <div className="shrink-0 p-4 border-b border-border">
         <ApplicationDetail
-          item={selectedItem}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onViewLogs={onViewLogs}
-        />
-      ) : (
-        <LogDetail
-          item={selectedItem}
-          parentApplication={parentApplication}
+          item={selectedApplication}
           onEdit={onEdit}
           onDelete={onDelete}
         />
-      )}
+      </div>
+
+      {/* Log List - Scrollable section */}
+      <div className="flex-1 min-h-0">
+        <JobLogList
+          logs={logs}
+          applicationId={selectedApplication.id}
+          onAddLog={onAddLog}
+          onUpdateLog={onUpdateLog}
+          isLoading={isLoading}
+        />
+      </div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "react-toastify";
+import Markdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -194,9 +195,15 @@ export default function WorkLogPanel({
                           placeholder="What did you work on?"
                         />
                       ) : (
-                        <p className="text-sm whitespace-pre-wrap">
-                          {log.content || <span className="text-muted-foreground italic">Click to add content...</span>}
-                        </p>
+                        <div className="prose prose-sm max-w-none text-foreground prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-code:text-foreground prose-li:text-foreground prose-a:text-primary">
+                          {log.content ? (
+                            <Markdown>
+                              {log.content}
+                            </Markdown>
+                          ) : (
+                            <p className="text-muted-foreground italic">Click to add content...</p>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>

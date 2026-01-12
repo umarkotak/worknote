@@ -65,19 +65,16 @@ export default function JobLogList({
 
     // Set new timer for 1 second delay
     saveTimerRef.current[logId] = setTimeout(async () => {
-      try {
-        const log = logs.find((l) => l.id === logId);
-        const updates = {
-          process_name: editContent[logId]?.process_name ?? log.process_name,
-          note: editContent[logId]?.note ?? log.note,
-          audio_url: editContent[logId]?.audio_url ?? log.audio_url,
-          [field]: value,
-        };
-        await onUpdateLog(logId, updates);
-        toast.success("Log saved");
-      } catch (error) {
-        toast.error(error.message || "Failed to save log");
-      }
+      const log = logs.find((l) => l.id === logId);
+      const updates = {
+        process_name: editContent[logId]?.process_name ?? log.process_name,
+        note: editContent[logId]?.note ?? log.note,
+        audio_url: editContent[logId]?.audio_url ?? log.audio_url,
+        [field]: value,
+      };
+      // onUpdateLog now handles errors internally
+      await onUpdateLog(logId, updates);
+      toast.success("Log saved");
     }, 1000);
   }, [logs, editContent, onUpdateLog]);
 
@@ -93,23 +90,20 @@ export default function JobLogList({
     e.preventDefault();
     if (!newLogText.trim()) return;
 
-    try {
-      await onAddLog({
-        process_name: newLogText,
-        note: "",
-        datetime: new Date(newLogDatetime).toISOString(),
-      });
-      setNewLogText("");
-      setNewLogDatetime(new Date().toISOString().slice(0, 16));
-      toast.success("Log added");
+    // onAddLog now handles errors internally
+    await onAddLog({
+      process_name: newLogText,
+      note: "",
+      datetime: new Date(newLogDatetime).toISOString(),
+    });
+    setNewLogText("");
+    setNewLogDatetime(new Date().toISOString().slice(0, 16));
+    toast.success("Log added");
 
-      // Scroll to bottom after adding
-      setTimeout(() => {
-        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
-    } catch (error) {
-      toast.error(error.message || "Failed to add log");
-    }
+    // Scroll to bottom after adding
+    setTimeout(() => {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
   };
 
   // Format datetime for display

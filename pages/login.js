@@ -22,25 +22,26 @@ export default function Login() {
 
   const handleSuccess = async (credentialResponse) => {
     setError(null);
-    try {
-      // credentialResponse.credential is the JWT (ID token)
-      const result = await api.googleLogin(credentialResponse.credential);
+    // credentialResponse.credential is the JWT (ID token)
+    const { data, error: apiError } = await api.googleLogin(credentialResponse.credential);
 
-      // Store the auth token in cookie (API returns access_token)
-      if (result.access_token) {
-        setCookie("auth_token", result.access_token, {
-          path: "/",
-          maxAge: 60 * 60 * 24 * 7, // 7 days
-          sameSite: "strict",
-          secure: process.env.NODE_ENV === "production",
-        });
-      }
-
-      // Redirect to dashboard
-      router.push("/dashboard");
-    } catch (err) {
-      setError(err.message || "Login failed. Please try again.");
+    if (apiError) {
+      setError(apiError.message || "Login failed. Please try again.");
+      return;
     }
+
+    // Store the auth token in cookie (API returns access_token)
+    if (data.access_token) {
+      setCookie("auth_token", data.access_token, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+        sameSite: "strict",
+        secure: process.env.NODE_ENV === "production",
+      });
+    }
+
+    // Redirect to dashboard
+    router.push("/dashboard");
   };
 
   const handleError = () => {
