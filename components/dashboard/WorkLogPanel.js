@@ -1,8 +1,16 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "react-toastify";
 import Markdown from "react-markdown";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight, MoreHorizontal, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, MoreHorizontal, Trash2, Sparkles, Pencil } from "lucide-react";
+
+function getMonthKey(dateStr) {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${year}-${month}`;
+}
 
 function formatDateForInput(dateStr) {
   if (!dateStr) return "";
@@ -42,6 +50,9 @@ export default function WorkLogPanel({
   onDelete,
   onLoadLog,
   isLoading,
+  onMonthSelect,
+  onGenerateSummary,
+  selectedMonth,
 }) {
   const containerRef = useRef(null);
   const bottomRef = useRef(null);
@@ -51,6 +62,7 @@ export default function WorkLogPanel({
   });
   const [editingLogId, setEditingLogId] = useState(null);
   const [editContent, setEditContent] = useState({});
+  const [savingLogs, setSavingLogs] = useState({});
   const [collapsedMonths, setCollapsedMonths] = useState({});
   const saveTimerRef = useRef({});
 
@@ -80,15 +92,18 @@ export default function WorkLogPanel({
 
     // Set new timer for 1 second delay
     const log = sortedLogs.find((l) => l.id === logId);
+    setSavingLogs(prev => ({ ...prev, [logId]: true }));
     saveTimerRef.current[logId] = setTimeout(async () => {
       try {
         await onSave({
           date: formatDateForInput(log.date),
           content: value,
         });
-        toast.success("Work log saved");
+        // Removed toast - visual indicator is on the textbox
       } catch (error) {
         toast.error(error.message || "Failed to save");
+      } finally {
+        setSavingLogs(prev => ({ ...prev, [logId]: false }));
       }
     }, 1000);
   }, [sortedLogs, onSave]);
@@ -145,7 +160,7 @@ export default function WorkLogPanel({
       {/* Chat-style Log List */}
       <div
         ref={containerRef}
-        className="flex-1 overflow-y-auto"
+        className="flex-1 overflow-y-auto relative"
       >
         {sortedLogs.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted-foreground p-4">
@@ -181,14 +196,24 @@ export default function WorkLogPanel({
             }
 
             return (
-              <div key={log.id}>
+              <React.Fragment key={log.id}>
                 {/* Sticky Month Header */}
                 {showMonthHeader && (
-                  <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border px-4 py-2">
+                  <div
+                    className={`sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border px-4 py-2 cursor-pointer transition-colors ${
+                      selectedMonth === getMonthKey(log.date)
+                        ? "border-l-2 border-l-primary"
+                        : "hover:bg-muted/30"
+                    }`}
+                    onClick={() => onMonthSelect?.(getMonthKey(log.date))}
+                  >
                     <div className="flex items-center justify-between">
                       <button
                         className="flex items-center gap-2 hover:bg-muted/50 rounded-md px-2 py-1 -ml-2 transition-colors"
-                        onClick={() => toggleMonthCollapse(monthKey)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleMonthCollapse(monthKey);
+                        }}
                       >
                         {isCollapsed ? (
                           <ChevronRight className="h-4 w-4" />
@@ -199,13 +224,27 @@ export default function WorkLogPanel({
                           📅 {monthKey}
                         </span>
                       </button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0"
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0"
+                          title="Generate Summary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onGenerateSummary?.(getMonthKey(log.date));
+                          }}
+                        >
+                          <Sparkles className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -214,33 +253,58 @@ export default function WorkLogPanel({
                 {!isCollapsed && (
                   <div className="px-4 py-2 group">
                     <div
-                      className="bg-card border border-border rounded-lg p-3 hover:shadow-md transition-shadow cursor-text"
-                      onClick={() => setEditingLogId(log.id)}
+                      className={`bg-card border border-border rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer ${
+                        selectedMonth === getMonthKey(log.date) ? "ring-1 ring-primary/30" : ""
+                      }`}
+                      onClick={() => {
+                        // Select month to show summary panel
+                        onMonthSelect?.(getMonthKey(log.date));
+                      }}
                     >
                       {editingLogId === log.id ? (
-                        <textarea
-                          value={editContent[log.id] ?? log.content}
-                          onChange={(e) => handleEditChange(log.id, e.target.value)}
-                          onBlur={() => setEditingLogId(null)}
-                          autoFocus
-                          rows={Math.max(3, (editContent[log.id] ?? log.content).split('\n').length)}
-                          className="w-full bg-transparent border-none outline-none text-sm resize-none"
-                          placeholder="What did you work on?"
-                        />
+                        <div className="relative">
+                          <textarea
+                            value={editContent[log.id] ?? log.content}
+                            onChange={(e) => handleEditChange(log.id, e.target.value)}
+                            onBlur={() => setEditingLogId(null)}
+                            autoFocus
+                            rows={Math.max(3, (editContent[log.id] ?? log.content).split('\n').length)}
+                            className={`w-full bg-transparent border-none outline-none text-sm resize-none ${savingLogs[log.id] ? 'opacity-70' : ''}`}
+                            placeholder="What did you work on?"
+                          />
+                          {savingLogs[log.id] && (
+                            <div className="absolute top-0 right-0 text-xs text-muted-foreground flex items-center gap-1">
+                              <div className="animate-spin h-3 w-3 border border-primary border-t-transparent rounded-full"></div>
+                              <span>Saving...</span>
+                            </div>
+                          )}
+                        </div>
                       ) : (
                         <>
-                          {/* Timestamp with delete button - at top */}
+                          {/* Timestamp with edit/delete buttons - at top */}
                           <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-border/50">
                             <span className="text-xs text-muted-foreground">
                               {formatBubbleDate(log.date)}
                             </span>
-                            <button
-                              onClick={(e) => handleDeleteLog(e, log)}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive p-1 rounded"
-                              title="Delete work log"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </button>
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingLogId(log.id);
+                                }}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary p-1 rounded"
+                                title="Edit work log"
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </button>
+                              <button
+                                onClick={(e) => handleDeleteLog(e, log)}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive p-1 rounded"
+                                title="Delete work log"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            </div>
                           </div>
                           <div className="prose prose-sm max-w-none text-foreground prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-code:text-foreground prose-li:text-foreground prose-a:text-primary">
                             {log.content ? (
@@ -256,7 +320,7 @@ export default function WorkLogPanel({
                     </div>
                   </div>
                 )}
-              </div>
+              </React.Fragment>
             );
           })
         )}
