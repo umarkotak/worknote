@@ -45,11 +45,8 @@ function formatBubbleDate(dateStr) {
 }
 
 function getMonthDateRange(monthKey) {
-  // monthKey is in format "YYYY-MM"
   const [year, month] = monthKey.split("-");
   const startDate = `${year}-${month}-01`;
-
-  // Get the last day of the month
   const lastDay = new Date(year, month, 0).getDate();
   const endDate = `${year}-${month}-${lastDay}`;
 
@@ -75,31 +72,26 @@ export default function WorkLogPanel({
   const [downloadingMonth, setDownloadingMonth] = useState(null);
   const saveTimerRef = useRef({});
 
-  // Sort logs by date (oldest first, newest at bottom like Slack)
   const sortedLogs = [...workLogs].sort(
     (a, b) => new Date(a.date) - new Date(b.date)
   );
 
-  // Auto-scroll to bottom on initial load
   useEffect(() => {
     if (sortedLogs.length > 0 && bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: "instant" });
     }
   }, [workLogs.length]);
 
-  // Debounced auto-save for editing
   const handleEditChange = useCallback((logId, value) => {
     setEditContent((prev) => ({
       ...prev,
       [logId]: value,
     }));
 
-    // Clear existing timer
     if (saveTimerRef.current[logId]) {
       clearTimeout(saveTimerRef.current[logId]);
     }
 
-    // Set new timer for 2 seconds delay
     const log = sortedLogs.find((l) => l.id === logId);
     setSavingLogs(prev => ({ ...prev, [logId]: true }));
     saveTimerRef.current[logId] = setTimeout(async () => {
@@ -108,7 +100,6 @@ export default function WorkLogPanel({
           date: formatDateForInput(log.date),
           content: value,
         });
-        // Removed toast - visual indicator is on the textbox
       } catch (error) {
         toast.error(error.message || "Failed to save");
       } finally {
@@ -117,14 +108,12 @@ export default function WorkLogPanel({
     }, 2000);
   }, [sortedLogs, onSave]);
 
-  // Cleanup timers
   useEffect(() => {
     return () => {
       Object.values(saveTimerRef.current).forEach(clearTimeout);
     };
   }, []);
 
-  // Handle add new log
   const handleAddLog = async (e) => {
     e.preventDefault();
     if (!content.trim()) return;
@@ -143,7 +132,6 @@ export default function WorkLogPanel({
     }
   };
 
-  // Toggle month collapse
   const toggleMonthCollapse = (monthKey) => {
     setCollapsedMonths((prev) => ({
       ...prev,
@@ -151,7 +139,6 @@ export default function WorkLogPanel({
     }));
   };
 
-  // Handle download worklogs for a month
   const handleDownload = async (e, monthKey) => {
     e.stopPropagation();
     const { startDate, endDate } = getMonthDateRange(monthKey);
@@ -164,7 +151,6 @@ export default function WorkLogPanel({
         return;
       }
 
-      // Create a blob and trigger download
       const blob = new Blob([data], { type: "text/markdown" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -185,7 +171,7 @@ export default function WorkLogPanel({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Chat-style Log List */}
+      {/* VSCode-style Log List */}
       <div
         ref={containerRef}
         className="flex-1 overflow-y-auto relative"
@@ -194,7 +180,7 @@ export default function WorkLogPanel({
           <div className="flex items-center justify-center h-full text-muted-foreground p-4">
             <div className="text-center">
               <svg
-                className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50"
+                className="w-10 h-10 mx-auto mb-2 text-muted-foreground/50"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -206,8 +192,8 @@ export default function WorkLogPanel({
                   d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
                 />
               </svg>
-              <p>No work logs yet</p>
-              <p className="text-sm mt-1">Add your first entry below</p>
+              <p className="text-xs">No work logs yet</p>
+              <p className="text-xs mt-1 text-muted-foreground">Add your first entry below</p>
             </div>
           </div>
         ) : (
@@ -218,89 +204,86 @@ export default function WorkLogPanel({
               formatMonthYear(log.date) !== formatMonthYear(prevLog.date);
             const isCollapsed = collapsedMonths[monthKey];
 
-            // Skip rendering log content if month is collapsed
             if (!showMonthHeader && collapsedMonths[formatMonthYear(log.date)]) {
               return null;
             }
 
             return (
               <React.Fragment key={log.id}>
-                {/* Sticky Month Header */}
+                {/* Compact Month Header - VSCode style */}
                 {showMonthHeader && (
                   <div
-                    className={`sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border px-4 py-2 cursor-pointer transition-colors ${
+                    className={`sticky top-0 z-10 bg-[#1e1e1e]/95 backdrop-blur-sm border-b border-[#3c3c3c] px-3 py-1 cursor-pointer transition-colors ${
                       selectedMonth === getMonthKey(log.date)
-                        ? "border-l-2 border-l-primary"
-                        : "hover:bg-muted/30"
+                        ? "border-l-2 border-l-[#007acc]"
+                        : "hover:bg-[#2a2a2d]/30"
                     }`}
                     onClick={() => onMonthSelect?.(getMonthKey(log.date))}
                   >
                     <div className="flex items-center justify-between">
                       <button
-                        className="flex items-center gap-2 hover:bg-muted/50 rounded-md px-2 py-1 -ml-2 transition-colors"
+                        className="flex items-center gap-1.5 hover:bg-[#2a2a2d]/50 rounded px-1.5 py-0.5 -ml-1.5 transition-colors"
                         onClick={(e) => {
                           e.stopPropagation();
                           toggleMonthCollapse(monthKey);
                         }}
                       >
                         {isCollapsed ? (
-                          <ChevronRight className="h-4 w-4" />
+                          <ChevronRight className="h-3 w-3 text-[#9da1a6]" />
                         ) : (
-                          <ChevronDown className="h-4 w-4" />
+                          <ChevronDown className="h-3 w-3 text-[#9da1a6]" />
                         )}
-                        <span className="font-semibold text-sm">
-                          📅 {monthKey}
+                        <span className="font-medium text-xs text-[#9cdcfe]">
+                          {monthKey}
                         </span>
                       </button>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 p-0"
-                          title="Download Worklogs"
-                          onClick={(e) => handleDownload(e, getMonthKey(log.date))}
-                          disabled={downloadingMonth === getMonthKey(log.date)}
-                        >
-                          {downloadingMonth === getMonthKey(log.date) ? (
-                            <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
-                          ) : (
-                            <Download className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-5 w-5 p-0"
+                        title="Download Worklogs"
+                        onClick={(e) => handleDownload(e, getMonthKey(log.date))}
+                        disabled={downloadingMonth === getMonthKey(log.date)}
+                      >
+                        {downloadingMonth === getMonthKey(log.date) ? (
+                          <div className="animate-spin h-3 w-3 border border-[#007acc] border-t-transparent rounded-full" />
+                        ) : (
+                          <Download className="h-3 w-3 text-[#9da1a6]" />
+                        )}
+                      </Button>
                     </div>
                   </div>
                 )}
 
-                {/* Chat Bubble - Only show if not collapsed */}
+                {/* Compact Log Entry - VSCode style */}
                 {!isCollapsed && (
-                  <div className="px-4 py-2">
+                  <div className="px-2 py-0.5 group">
                     <div
-                      className={`bg-card border border-border rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer ${
-                        selectedMonth === getMonthKey(log.date) ? "ring-1 ring-primary/30" : ""
+                      className={`flex gap-2 py-1 hover:bg-[#2a2a2d]/30 rounded px-1.5 transition-colors cursor-pointer ${
+                        selectedMonth === getMonthKey(log.date) ? "bg-[#2a2a2d]/20" : ""
                       }`}
-                      onClick={() => {
-                        // Select month to show summary panel
-                        onMonthSelect?.(getMonthKey(log.date));
-                      }}
+                      onClick={() => onMonthSelect?.(getMonthKey(log.date))}
                     >
-                      <div className="relative">
-                        <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-border/50">
-                          <span className="text-xs text-muted-foreground">
-                            {formatBubbleDate(log.date)}
-                          </span>
-                          {savingLogs[log.id] && (
-                            <div className="text-xs text-muted-foreground flex items-center gap-1">
-                              <div className="animate-spin h-3 w-3 border border-primary border-t-transparent rounded-full"></div>
-                              <span>Saving...</span>
-                            </div>
-                          )}
-                        </div>
+                      {/* Line number style date indicator */}
+                      <div className="flex-shrink-0 w-16 pt-1">
+                        <span className="text-[10px] text-[#6e7681] font-mono select-none">
+                          {formatBubbleDate(log.date)}
+                        </span>
+                      </div>
+
+                      {/* Content area */}
+                      <div className="flex-1 min-w-0">
+                        {savingLogs[log.id] && (
+                          <div className="text-[10px] text-[#6e7681] flex items-center gap-1 mb-0.5">
+                            <div className="animate-spin h-2 w-2 border border-[#007acc] border-t-transparent rounded-full"></div>
+                            <span>Saving...</span>
+                          </div>
+                        )}
                         <textarea
                           value={editContent[log.id] ?? log.content}
                           onChange={(e) => handleEditChange(log.id, e.target.value)}
-                          rows={Math.max(4, (editContent[log.id] ?? log.content).split("\n").length)}
-                          className={`w-full rounded-md border border-[#3c3c3c] bg-[#1e1e1e] px-3 py-2 font-mono text-[13px] leading-6 text-[#d4d4d4] resize-y focus:outline-none focus:ring-1 focus:ring-[#007acc] ${savingLogs[log.id] ? "opacity-80" : ""}`}
+                          rows={Math.max(2, (editContent[log.id] ?? log.content).split("\n").length)}
+                          className={`w-full bg-transparent px-0 py-0.5 font-mono text-[12px] leading-[18px] text-[#d4d4d4] resize-none focus:outline-none ${savingLogs[log.id] ? "opacity-70" : ""}`}
                           placeholder="What did you work on?"
                         />
                       </div>
@@ -312,38 +295,35 @@ export default function WorkLogPanel({
           })
         )}
 
-        {/* Bottom scroll anchor */}
         <div ref={bottomRef} />
       </div>
 
-      {/* Fixed Input Bar at Bottom */}
+      {/* Compact Input Bar at Bottom */}
       <form
         onSubmit={handleAddLog}
-        className="shrink-0 border-t border-border bg-background p-4"
+        className="shrink-0 border-t border-[#3c3c3c] bg-[#1e1e1e] p-2"
       >
-        <div className="flex gap-3 items-start">
+        <div className="flex gap-2 items-start">
           <input
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="shrink-0 rounded-md border border-input bg-background px-3 py-2 text-sm h-10"
+            className="shrink-0 rounded border border-[#3c3c3c] bg-[#252526] px-2 py-1 text-[11px] h-7 text-[#d4d4d4] focus:outline-none focus:ring-1 focus:ring-[#007acc]"
           />
-          <div className="flex-1 flex flex-col gap-2">
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="What did you work on today? Press Enter to add..."
-              rows={2}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleAddLog(e);
-                }
-              }}
-            />
-          </div>
-          <Button type="submit" disabled={!content.trim() || isLoading} className="h-10">
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="What did you work on? Enter to add..."
+            rows={1}
+            className="flex-1 rounded border border-[#3c3c3c] bg-[#252526] px-2 py-1 text-[12px] h-7 font-mono leading-[18px] text-[#d4d4d4] resize-none focus:outline-none focus:ring-1 focus:ring-[#007acc]"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleAddLog(e);
+              }
+            }}
+          />
+          <Button type="submit" disabled={!content.trim() || isLoading} className="h-7 px-3 text-xs">
             Add
           </Button>
         </div>
