@@ -10,6 +10,7 @@ import {
   BookOpen,
   Check,
   Circle,
+  Square,
   Briefcase,
   ChevronDown,
   Copy,
@@ -172,6 +173,7 @@ export default function JournalDetailPage() {
   const lastSavedContentRef = useRef("");
   const hydratedEditorRef = useRef(false);
   const [showCameraFeed, setShowCameraFeed] = useState(false);
+  const [isCameraVideoEnabled, setIsCameraVideoEnabled] = useState(true);
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isPreparingRecording, setIsPreparingRecording] = useState(false);
@@ -398,6 +400,10 @@ export default function JournalDetailPage() {
   const attachCameraToPreview = useCallback(() => {
     if (!cameraVideoRef.current || !cameraStreamRef.current) return;
     cameraVideoRef.current.srcObject = cameraStreamRef.current;
+    const playPromise = cameraVideoRef.current.play?.();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(() => {});
+    }
   }, []);
 
   const loadCameraDevices = useCallback(async () => {
@@ -462,15 +468,21 @@ export default function JournalDetailPage() {
     stream.getAudioTracks().forEach((track) => {
       track.enabled = !isMicMuted;
     });
+    stream.getVideoTracks().forEach((track) => {
+      track.enabled = isCameraVideoEnabled;
+    });
     attachCameraToPreview();
     await loadCameraDevices();
     return stream;
-  }, [attachCameraToPreview, isMicMuted, selectedCameraId, selectedMicId, loadCameraDevices]);
+  }, [attachCameraToPreview, isCameraVideoEnabled, isMicMuted, selectedCameraId, selectedMicId, loadCameraDevices]);
 
   useEffect(() => {
     if (!showCameraFeed) return;
-    attachCameraToPreview();
-  }, [showCameraFeed, attachCameraToPreview]);
+    const frame = requestAnimationFrame(() => {
+      attachCameraToPreview();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [showCameraFeed, attachCameraToPreview, isCameraVideoEnabled]);
 
   const chooseRecordingMimeType = () => {
     const candidates = [
@@ -700,12 +712,27 @@ export default function JournalDetailPage() {
     if (!showCameraFeed) {
       try {
         await ensureCameraStream();
+        setShowCameraFeed(true);
+        return;
       } catch (error) {
         toast.error(error.message || "Failed to access camera");
         return;
       }
     }
-    setShowCameraFeed((prev) => !prev);
+    setShowCameraFeed(false);
+  };
+
+  const handleToggleCameraVideo = async () => {
+    try {
+      const stream = await ensureCameraStream();
+      const nextEnabled = !isCameraVideoEnabled;
+      stream.getVideoTracks().forEach((track) => {
+        track.enabled = nextEnabled;
+      });
+      setIsCameraVideoEnabled(nextEnabled);
+    } catch (error) {
+      toast.error(error.message || "Failed to access camera");
+    }
   };
 
   const handleToggleMute = async () => {
@@ -818,7 +845,7 @@ export default function JournalDetailPage() {
       }}
     >
       {showTopNavbar && (
-      <header className="sticky top-0 z-40 border-b border-[#3c3c3c] bg-[#1e1e1e]/95 backdrop-blur">
+      <header className="sticky top-0 z-40 bg-[#1e1e1e]/95 backdrop-blur">
         <div className="mx-auto flex h-16 w-full max-w-[1600px] items-center justify-between px-3 sm:px-4">
           <div className="flex w-[180px] items-center justify-start">
             <Link href="/" className="inline-flex items-center gap-2.5">
@@ -923,13 +950,13 @@ export default function JournalDetailPage() {
       )}
 
       <main className={`${showTopNavbar ? "h-[calc(100vh-64px)]" : "h-screen"} w-screen`}>
-        <div className="grid h-full grid-cols-2 gap-2 overflow-hidden bg-[#252526] p-2">
-          <section className="grid min-h-0 grid-rows-[auto_1fr_1fr] gap-2 overflow-hidden rounded-md border border-[#3c3c3c] bg-[#1f1f1f] p-2">
-            <div className="flex items-center justify-between rounded-md border border-[#3c3c3c] bg-[#252526] px-2 py-1.5">
+        <div className="grid h-full grid-cols-2 gap-0 overflow-hidden bg-[#1b1b1d] px-2 pb-2">
+          <section className="grid min-h-0 grid-rows-[auto_1fr_1fr] gap-0 overflow-hidden bg-[#1b1b1d]">
+            <div className="flex items-center justify-between bg-[#202225] px-3 py-2 h-14">
               <div className="flex min-w-0 items-center gap-2">
                 <Link
                   href="/a/journal"
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#3c3c3c] bg-[#1f1f1f] text-[#9da1a6] hover:bg-[#2d2d30]"
+                  className="inline-flex h-8 w-8 items-center justify-center bg-[#17181b] text-[#9da1a6] hover:bg-[#2d2d30]"
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </Link>
@@ -937,9 +964,6 @@ export default function JournalDetailPage() {
                   <h1 className="truncate text-sm font-semibold text-[#e8e8e8]">
                     {journal.title}
                   </h1>
-                  <p className="truncate text-xs text-[#b4b4b4]">
-                    {journal.video_title || "Untitled video"}
-                  </p>
                   <div className="flex items-center gap-1.5">
                     <p className="truncate text-xs text-[#8f9397]">
                       {journal.video_url}
@@ -947,7 +971,7 @@ export default function JournalDetailPage() {
                     <button
                       type="button"
                       onClick={handleCopyVideoUrl}
-                      className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded border border-[#3c3c3c] bg-[#252526] text-[#9da1a6] hover:bg-[#2d2d30]"
+                      className="inline-flex h-5 w-5 shrink-0 items-center justify-center bg-[#17181b] text-[#9da1a6] hover:bg-[#2d2d30]"
                       title="Copy video URL"
                     >
                       {isUrlCopied ? (
@@ -964,7 +988,7 @@ export default function JournalDetailPage() {
                 type="button"
                 onClick={handleSave}
                 disabled={isSaving}
-                className="h-8 rounded-md bg-[#007acc] px-3 text-xs font-semibold text-white hover:bg-[#0e639c]"
+                className="h-8 bg-[#007acc] px-3 text-xs font-semibold text-white hover:bg-[#0e639c]"
               >
                 {saveState === "saving" ? (
                   <>
@@ -985,7 +1009,7 @@ export default function JournalDetailPage() {
               </Button>
             </div>
 
-            <div className="overflow-hidden rounded-md border border-[#3c3c3c] bg-black">
+            <div className="overflow-hidden bg-black">
               <ReactPlayer
                 src={journal.video_url}
                 width="100%"
@@ -1004,16 +1028,16 @@ export default function JournalDetailPage() {
               />
             </div>
 
-            <div className="min-h-0 overflow-hidden rounded-md border border-[#3c3c3c] bg-[#252526]">
-              <div className="flex items-center justify-between border-b border-[#3c3c3c] px-3 py-2">
+            <div className="min-h-0 overflow-hidden bg-[#1f1f1f]">
+              <div className="flex items-center justify-between bg-[#202225] px-3 py-2">
                 <div className="flex items-center gap-1.5">
                   <button
                     type="button"
                     onClick={() => setDetailTab("info")}
-                    className={`inline-flex h-7 items-center rounded-md border px-2 text-[11px] font-semibold ${
+                    className={`inline-flex h-7 items-center px-2 text-[11px] font-semibold ${
                       detailTab === "info"
-                        ? "border-[#007acc] bg-[#0e3550] text-[#dcefff]"
-                        : "border-[#3c3c3c] bg-[#1f1f1f] text-[#9da1a6] hover:bg-[#2d2d30]"
+                        ? "bg-[#26313d] text-[#dcefff] shadow-[inset_2px_0_0_0_#2f81f7]"
+                        : "bg-[#17181b] text-[#9da1a6] hover:bg-[#2d2d30]"
                     }`}
                   >
                     Info
@@ -1021,10 +1045,10 @@ export default function JournalDetailPage() {
                   <button
                     type="button"
                     onClick={() => setDetailTab("captions")}
-                    className={`inline-flex h-7 items-center rounded-md border px-2 text-[11px] font-semibold ${
+                    className={`inline-flex h-7 items-center px-2 text-[11px] font-semibold ${
                       detailTab === "captions"
-                        ? "border-[#007acc] bg-[#0e3550] text-[#dcefff]"
-                        : "border-[#3c3c3c] bg-[#1f1f1f] text-[#9da1a6] hover:bg-[#2d2d30]"
+                        ? "bg-[#26313d] text-[#dcefff] shadow-[inset_2px_0_0_0_#2f81f7]"
+                        : "bg-[#17181b] text-[#9da1a6] hover:bg-[#2d2d30]"
                     }`}
                   >
                     Captions
@@ -1035,7 +1059,7 @@ export default function JournalDetailPage() {
                     type="button"
                     onClick={handleRefreshTranscript}
                     disabled={isRefreshingTranscript}
-                    className="inline-flex h-7 items-center gap-1 rounded-md border border-[#3c3c3c] bg-[#1f1f1f] px-2 text-[11px] font-semibold text-[#9cdcfe] hover:bg-[#2d2d30] disabled:cursor-not-allowed disabled:opacity-70"
+                    className="inline-flex h-7 items-center gap-1 bg-[#17181b] px-2 text-[11px] font-semibold text-[#9cdcfe] hover:bg-[#2d2d30] disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     {isRefreshingTranscript ? (
                       <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
@@ -1051,20 +1075,20 @@ export default function JournalDetailPage() {
                 className="h-[calc(100%-37px)] overflow-y-auto p-2"
               >
                 {detailTab === "info" ? (
-                  <div className="space-y-2">
-                    <div className="rounded-md border border-[#3c3c3c] bg-[#1f1f1f] px-3 py-2">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9da1a6]">Video Title</p>
-                      <p className="mt-1 text-sm text-[#e8e8e8]">{journal.video_title || "Untitled video"}</p>
-                    </div>
-                    <div className="rounded-md border border-[#3c3c3c] bg-[#1f1f1f] px-3 py-2">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9da1a6]">Description</p>
+                    <div className="space-y-2">
+                      <div className="bg-[#17181b] px-3 py-2">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9da1a6]">Title</p>
+                        <p className="mt-1 text-sm text-[#e8e8e8]">{journal.video_title || "Untitled video"}</p>
+                      </div>
+                      <div className="bg-[#17181b] px-3 py-2">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9da1a6]">Description</p>
                       <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-[#c8c8c8]">
                         {journal.video_description || "No description available."}
                       </p>
                     </div>
                   </div>
                 ) : captionSegments.length === 0 ? (
-                  <div className="rounded-md border border-dashed border-[#3c3c3c] bg-[#1f1f1f] px-3 py-4 text-sm text-[#8f9397]">
+                  <div className="bg-[#17181b] px-3 py-4 text-sm text-[#8f9397]">
                     Caption data is not available for this video.
                   </div>
                 ) : (
@@ -1077,8 +1101,8 @@ export default function JournalDetailPage() {
                           ref={active ? activeCaptionRef : null}
                           className={`rounded-md border px-2.5 py-2 text-sm leading-6 transition-colors ${
                             active
-                              ? "border-[#007acc] bg-[#0e3550] text-[#dcefff]"
-                              : "border-[#3c3c3c] bg-[#1f1f1f] text-[#c8c8c8]"
+                              ? "bg-[#26313d] text-[#dcefff] shadow-[inset_2px_0_0_0_#2f81f7]"
+                              : "bg-[#17181b] text-[#c8c8c8]"
                           }`}
                         >
                           <div className="mb-1 text-[11px] font-semibold text-[#9cdcfe]">
@@ -1095,8 +1119,8 @@ export default function JournalDetailPage() {
             </div>
           </section>
 
-          <section className="grid min-h-0 grid-rows-[1fr] overflow-hidden rounded-md border border-[#3c3c3c] bg-[#1f1f1f]">
-            <div className="min-h-0 overflow-y-auto w-full">
+          <section className="grid min-h-0 grid-rows-[1fr] overflow-hidden bg-[#1b1b1d]">
+            <div className="h-14 overflow-y-auto w-full">
               <style>{`
                 .quill-dark { height: 100%; display: flex; flex-direction: column; border: none !important; }
                 .quill-dark .ql-toolbar,
@@ -1116,9 +1140,9 @@ export default function JournalDetailPage() {
                 .quill-dark .ql-toolbar button,
                 .quill-dark .ql-toolbar .ql-picker-label {
                   height: 30px;
-                  border: 1px solid #3c3c3c;
-                  border-radius: 6px;
-                  background: #1f1f1f;
+                  border: none;
+                  border-radius: 0;
+                  background: #17181b;
                 }
                 .quill-dark .ql-toolbar button:hover,
                 .quill-dark .ql-toolbar .ql-picker-label:hover {
@@ -1127,19 +1151,19 @@ export default function JournalDetailPage() {
                 .quill-dark .ql-toolbar .ql-picker-label { padding: 0 10px; display: inline-flex; align-items: center; }
                 .quill-dark .ql-toolbar .ql-picker.ql-header { min-width: 92px; }
                 .quill-dark .ql-toolbar .ql-picker-options {
-                  background: #1f1f1f;
-                  border: 1px solid #3c3c3c;
+                  background: #17181b;
+                  border: none;
                 }
                 .quill-dark .ql-toolbar .ql-picker-item:hover {
                   background: #2d2d30;
                   color: #d4d4d4;
                 }
-                .quill-dark .ql-container { background: #1f1f1f; color: #d4d4d4; border: none; flex-grow: 1; overflow-y: auto; font-family: var(--font-body); font-size: 14px; line-height: 1.6; }
-                .quill-dark .ql-editor { min-height: 300px; padding: 16px; }
+                .quill-dark .ql-container { background: #17181b; color: #d4d4d4; border: none; flex-grow: 1; overflow-y: auto; font-family: var(--font-body); font-size: 14px; line-height: 1.6; }
+                .quill-dark .ql-editor { min-height: 300px; padding: 14px; }
                 .quill-dark .ql-editor.ql-blank::before { color: #8f9397; font-style: normal; }
               `}</style>
 
-              <div className="flex items-center justify-between border-b border-[#3c3c3c] bg-[#252526] px-3 py-2">
+              <div className="flex items-center justify-between bg-[#202225] px-3 py-2">
                 <div id="journal-editor-toolbar">
                   <span className="ql-formats">
                     <select className="ql-header" defaultValue="">
@@ -1164,10 +1188,10 @@ export default function JournalDetailPage() {
                 <button
                   type="button"
                   onClick={() => setIsQuranDrawerOpen((prev) => !prev)}
-                  className={`inline-flex h-[30px] items-center gap-1.5 rounded-md border bg-[#1f1f1f] px-2.5 text-[11px] font-semibold transition-colors hover:bg-[#2d2d30] ${
+                  className={`inline-flex h-[30px] items-center gap-1.5 bg-[#17181b] px-2.5 text-[11px] font-semibold transition-colors hover:bg-[#2d2d30] ${
                     isQuranDrawerOpen
-                      ? "border-[#007acc] text-[#9cdcfe]"
-                      : "border-[#3c3c3c] text-[#d4d4d4]"
+                      ? "text-[#9cdcfe] shadow-[inset_2px_0_0_0_#2f81f7]"
+                      : "text-[#d4d4d4]"
                   }`}
                 >
                   <BookText className="h-4 w-4" />
@@ -1189,12 +1213,12 @@ export default function JournalDetailPage() {
         </div>
       </main>
 
-      <div
-        className={`fixed right-0 top-0 z-40 h-screen w-[min(92vw,560px)] overflow-hidden border-l border-[#3c3c3c] bg-[#1f1f1f] shadow-2xl shadow-black/50 transition-transform duration-300 ${
-          isQuranDrawerOpen ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
-        <div className="flex h-14 items-center justify-between border-b border-[#3c3c3c] bg-[#252526] px-3">
+        <div
+          className={`fixed right-0 top-0 z-40 h-screen w-[min(92vw,560px)] overflow-hidden bg-[#1f1f1f] shadow-2xl shadow-black/50 transition-transform duration-300 ${
+            isQuranDrawerOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+        <div className="flex h-14 items-center justify-between bg-[#202225] px-3">
           <div>
             <h2 className="text-sm font-semibold text-[#e8e8e8]">Quran Drawer</h2>
             <p className="text-[11px] text-[#9da1a6]">Cari surah dan ayat</p>
@@ -1202,20 +1226,20 @@ export default function JournalDetailPage() {
           <button
             type="button"
             onClick={() => setIsQuranDrawerOpen(false)}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#3c3c3c] bg-[#1f1f1f] text-[#9da1a6] hover:bg-[#2d2d30]"
+            className="inline-flex h-8 w-8 items-center justify-center bg-[#17181b] text-[#9da1a6] hover:bg-[#2d2d30]"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
         <div className="grid h-[calc(100vh-56px)] min-h-0 grid-cols-[220px_1fr] overflow-hidden">
-          <div className="min-h-0 border-r border-[#3c3c3c] p-2">
+          <div className="min-h-0 bg-[#1b1d20] p-2">
             <input
               type="text"
               value={surahQuery}
               onChange={(event) => setSurahQuery(event.target.value)}
               placeholder="Cari nama surah..."
-              className="h-9 w-full rounded-md border border-[#3c3c3c] bg-[#252526] px-2.5 text-sm text-[#d4d4d4] outline-none focus:ring-2 focus:ring-[#007acc]/60"
+              className="h-9 w-full bg-[#17181b] px-2.5 text-sm text-[#d4d4d4] outline-none focus:ring-1 focus:ring-[#007acc]"
             />
 
             <div className="mt-2 h-[calc(100%-44px)] min-h-0 overflow-y-auto space-y-1">
@@ -1225,14 +1249,14 @@ export default function JournalDetailPage() {
                   Loading
                 </div>
               ) : quranListError ? (
-                <div className="rounded-md border border-[#5a1d1d] bg-[#3a1717] px-2 py-1.5 text-xs text-[#f48771]">
-                  {quranListError}
-                </div>
-              ) : filteredSurahList.length === 0 ? (
-                <div className="rounded-md border border-dashed border-[#3c3c3c] px-2 py-2 text-xs text-[#9da1a6]">
-                  Surah tidak ditemukan.
-                </div>
-              ) : (
+                  <div className="bg-[#331b1b] px-2 py-1.5 text-xs text-[#f48771]">
+                    {quranListError}
+                  </div>
+                ) : filteredSurahList.length === 0 ? (
+                  <div className="bg-[#17181b] px-2 py-2 text-xs text-[#9da1a6]">
+                    Surah tidak ditemukan.
+                  </div>
+                ) : (
                 filteredSurahList.map((surah) => {
                   const active = selectedSurah?.nomor === surah.nomor;
                   return (
@@ -1240,11 +1264,11 @@ export default function JournalDetailPage() {
                       key={surah.nomor}
                       type="button"
                       onClick={() => loadSurahDetail(surah)}
-                      className={`w-full rounded-md border px-2 py-1.5 text-left transition-colors ${
-                        active
-                          ? "border-[#007acc] bg-[#0e3550]"
-                          : "border-[#3c3c3c] bg-[#252526] hover:bg-[#2d2d30]"
-                      }`}
+                        className={`w-full px-2 py-1.5 text-left transition-colors ${
+                          active
+                            ? "bg-[#26313d] shadow-[inset_2px_0_0_0_#2f81f7]"
+                            : "bg-[#17181b] hover:bg-[#2d2d30]"
+                        }`}
                     >
                       <p className="text-xs font-semibold text-[#e8e8e8]">{surah.nomor}. {surah.namaLatin || surah.nama}</p>
                       <p className="text-[11px] text-[#9da1a6]">{surah.arti || "-"}</p>
@@ -1262,7 +1286,7 @@ export default function JournalDetailPage() {
                 value={ayatQuery}
                 onChange={(event) => setAyatQuery(event.target.value)}
                 placeholder="Cari ayat / nomor ayat..."
-                className="h-9 w-full rounded-md border border-[#3c3c3c] bg-[#252526] px-2.5 text-sm text-[#d4d4d4] outline-none focus:ring-2 focus:ring-[#007acc]/60"
+                className="h-9 w-full bg-[#17181b] px-2.5 text-sm text-[#d4d4d4] outline-none focus:ring-1 focus:ring-[#007acc]"
               />
               {selectedSurah && (
                 <p className="text-[11px] text-[#9da1a6]">
@@ -1278,15 +1302,15 @@ export default function JournalDetailPage() {
                   Loading ayat
                 </div>
               ) : surahDetailError ? (
-                <div className="rounded-md border border-[#5a1d1d] bg-[#3a1717] px-2 py-1.5 text-xs text-[#f48771]">
+                <div className="bg-[#331b1b] px-2 py-1.5 text-xs text-[#f48771]">
                   {surahDetailError}
                 </div>
               ) : !selectedSurahDetail ? (
-                <div className="rounded-md border border-dashed border-[#3c3c3c] px-3 py-4 text-xs text-[#9da1a6]">
+                <div className="bg-[#17181b] px-3 py-4 text-xs text-[#9da1a6]">
                   Pilih surah untuk menampilkan ayat.
                 </div>
               ) : filteredAyatList.length === 0 ? (
-                <div className="rounded-md border border-dashed border-[#3c3c3c] px-3 py-4 text-xs text-[#9da1a6]">
+                <div className="bg-[#17181b] px-3 py-4 text-xs text-[#9da1a6]">
                   Ayat tidak ditemukan.
                 </div>
               ) : (
@@ -1294,7 +1318,7 @@ export default function JournalDetailPage() {
                   {filteredAyatList.map((line) => (
                     <article
                       key={line.nomorAyat || line.nomor || `${line.teksArab}-${line.teksIndonesia}`}
-                      className="rounded-md border border-[#3c3c3c] bg-[#252526] px-3 py-2"
+                      className="bg-[#17181b] px-3 py-2"
                     >
                       <p className="mb-1 text-xs font-semibold text-[#9cdcfe]">
                         Ayat {line.nomorAyat || line.nomor || "-"}
@@ -1317,23 +1341,38 @@ export default function JournalDetailPage() {
       <div className="pointer-events-none fixed bottom-3 left-1/2 z-50 -translate-x-1/2">
         <div className="pointer-events-auto">
           {showCameraFeed ? (
-            <div className="group relative h-[220px] w-[392px] overflow-hidden rounded-lg border border-[#3c3c3c] bg-black shadow-2xl shadow-black/50">
+            <div className="group relative h-[220px] w-[392px] overflow-hidden bg-black shadow-2xl shadow-black/50">
               <video
-                ref={cameraVideoRef}
+                ref={(node) => {
+                  cameraVideoRef.current = node;
+                  if (node) {
+                    requestAnimationFrame(() => {
+                      attachCameraToPreview();
+                    });
+                  }
+                }}
                 autoPlay
                 playsInline
                 muted
-                className="h-full w-full object-cover"
+                className={`h-full w-full object-cover ${isCameraVideoEnabled ? "opacity-100" : "opacity-0"}`}
               />
+              {!isCameraVideoEnabled && (
+                <div className="absolute inset-0 flex items-center justify-center bg-[#0f1012] text-[#8f9397]">
+                  <div className="flex items-center gap-2 text-sm">
+                    <VideoOff className="h-4 w-4" />
+                    Camera video disabled
+                  </div>
+                </div>
+              )}
 
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
 
-              <div className="absolute inset-x-2 bottom-2 space-y-1.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                <div className="grid grid-cols-3 gap-1.5">
+              <div className="absolute inset-x-2 top-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                <div className="grid grid-cols-[72px_104px_104px_32px] gap-1.5 justify-center">
                   <select
                     value={recordingQuality}
                     onChange={(event) => setRecordingQuality(event.target.value)}
-                    className="h-7 rounded-md border border-[#3c3c3c] bg-[#1f1f1f]/95 px-1.5 text-[11px] font-semibold text-[#d4d4d4] outline-none focus:ring-2 focus:ring-[#007acc]/60"
+                    className="h-7 w-[72px] bg-[#1f1f1f]/95 px-1.5 text-[11px] font-semibold text-[#d4d4d4] outline-none focus:ring-1 focus:ring-[#007acc]"
                   >
                     <option value="1080">1080p</option>
                     <option value="1440">2k</option>
@@ -1342,7 +1381,7 @@ export default function JournalDetailPage() {
                   <select
                     value={selectedCameraId}
                     onChange={(event) => handleCameraSelect(event.target.value)}
-                    className="h-7 rounded-md border border-[#3c3c3c] bg-[#1f1f1f]/95 px-1.5 text-[11px] font-semibold text-[#d4d4d4] outline-none focus:ring-2 focus:ring-[#007acc]/60"
+                    className="h-7 w-[104px] bg-[#1f1f1f]/95 px-1.5 text-[11px] font-semibold text-[#d4d4d4] outline-none focus:ring-1 focus:ring-[#007acc]"
                   >
                     {cameraDevices.length === 0 ? (
                       <option value="">Camera</option>
@@ -1360,7 +1399,7 @@ export default function JournalDetailPage() {
                   <select
                     value={selectedMicId}
                     onChange={(event) => handleMicSelect(event.target.value)}
-                    className="h-7 rounded-md border border-[#3c3c3c] bg-[#1f1f1f]/95 px-1.5 text-[11px] font-semibold text-[#d4d4d4] outline-none focus:ring-2 focus:ring-[#007acc]/60"
+                    className="h-7 w-[104px] bg-[#1f1f1f]/95 px-1.5 text-[11px] font-semibold text-[#d4d4d4] outline-none focus:ring-1 focus:ring-[#007acc]"
                   >
                     {micDevices.length === 0 ? (
                       <option value="">Mic</option>
@@ -1375,21 +1414,35 @@ export default function JournalDetailPage() {
                       ))
                     )}
                   </select>
-                </div>
-
-                <div className="grid grid-cols-[auto_auto_1fr_auto] gap-1.5">
                   <button
                     type="button"
                     onClick={handleToggleCameraFeed}
-                    className="inline-flex h-8 items-center justify-center rounded-md border border-[#3c3c3c] bg-[#1f1f1f]/95 px-2 text-[#9cdcfe] hover:bg-[#2d2d30]"
-                    title="Hide camera"
+                    className="inline-flex h-7 items-center justify-center bg-[#1f1f1f]/95 px-2 text-[#9da1a6] hover:bg-[#2d2d30]"
+                    title="Hide camera panel"
                   >
-                    <VideoOff className="h-4 w-4" />
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="absolute inset-x-2 bottom-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                <div className="grid grid-cols-4 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={handleToggleCameraVideo}
+                    className={`inline-flex h-8 items-center justify-center px-2 hover:bg-[#2d2d30] ${
+                      isCameraVideoEnabled
+                        ? "bg-[#26313d] text-[#dcefff] shadow-[inset_2px_0_0_0_#2f81f7]"
+                        : "bg-[#1f1f1f]/95 text-[#9cdcfe]"
+                    }`}
+                    title={isCameraVideoEnabled ? "Disable camera video" : "Enable camera video"}
+                  >
+                    {isCameraVideoEnabled ? <VideoOff className="h-4 w-4" /> : <Video className="h-4 w-4" />}
                   </button>
                   <button
                     type="button"
                     onClick={handleToggleMute}
-                    className="inline-flex h-8 items-center justify-center rounded-md border border-[#3c3c3c] bg-[#1f1f1f]/95 px-2 text-[#9cdcfe] hover:bg-[#2d2d30]"
+                    className="inline-flex h-8 items-center justify-center bg-[#1f1f1f]/95 px-2 text-[#9cdcfe] hover:bg-[#2d2d30]"
                     title={isMicMuted ? "Unmute microphone" : "Mute microphone"}
                   >
                     {isMicMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
@@ -1399,30 +1452,30 @@ export default function JournalDetailPage() {
                       type="button"
                       onClick={startScreenRecording}
                       disabled={isPreparingRecording}
-                      className="inline-flex h-8 items-center justify-center gap-1 rounded-md border border-[#3c3c3c] bg-[#007acc] px-2 text-xs font-semibold text-white hover:bg-[#0e639c] disabled:opacity-70"
+                      className="inline-flex h-8 items-center justify-center bg-[#007acc] px-2 text-white hover:bg-[#0e639c] disabled:opacity-70"
+                      title={isPreparingRecording ? "Preparing recording" : "Start recording"}
                     >
                       {isPreparingRecording ? (
-                        <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                        <LoaderCircle className="h-4 w-4 animate-spin" />
                       ) : (
-                        <Circle className="h-3.5 w-3.5" />
+                        <Circle className="h-4 w-4" />
                       )}
-                      {isPreparingRecording ? "Preparing" : "Record Screen"}
                     </button>
                   ) : (
                     <button
                       type="button"
                       onClick={stopScreenRecording}
-                      className="inline-flex h-8 items-center justify-center gap-1 rounded-md border border-[#5a1d1d] bg-[#3a1717] px-2 text-xs font-semibold text-[#f48771] hover:bg-[#4a1d1d]"
+                      className="inline-flex h-8 items-center justify-center bg-[#331b1b] px-2 text-[#f48771] hover:bg-[#4a1d1d]"
+                      title="Stop recording"
                     >
-                      <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
-                      Stop Recording
+                      <Square className="h-4 w-4 fill-current" />
                     </button>
                   )}
                   <button
                     type="button"
                     onClick={handleDownloadRecording}
                     disabled={!recordedVideoUrl || isRecording}
-                    className="inline-flex h-8 items-center justify-center rounded-md border border-[#3c3c3c] bg-[#1f1f1f]/95 px-2 text-[#9cdcfe] hover:bg-[#2d2d30] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex h-8 items-center justify-center bg-[#1f1f1f]/95 px-2 text-[#9cdcfe] hover:bg-[#2d2d30] disabled:cursor-not-allowed disabled:opacity-60"
                     title="Download recording"
                   >
                     <Download className="h-4 w-4" />
@@ -1434,10 +1487,10 @@ export default function JournalDetailPage() {
             <button
               type="button"
               onClick={handleToggleCameraFeed}
-              className="inline-flex h-10 items-center gap-2 rounded-md border border-[#3c3c3c] bg-[#1f1f1f]/95 px-3 text-xs font-semibold text-[#d4d4d4] shadow-2xl shadow-black/40 hover:bg-[#2d2d30]"
+              className="inline-flex h-9 items-center gap-2 bg-[#1f1f1f]/95 px-3 text-xs font-semibold text-[#d4d4d4] shadow-2xl shadow-black/40 hover:bg-[#2d2d30]"
             >
               <Video className="h-4 w-4" />
-              Show Camera
+              Show Camera Panel
             </button>
           )}
         </div>

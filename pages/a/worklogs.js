@@ -130,8 +130,8 @@ export default function WorkLogsPage() {
       isLoading={isLoading}
       loadingText="Loading daily logs..."
     >
-      <main className="mx-auto flex h-[calc(100vh-56px)] w-full max-w-[1600px] min-h-0 p-2">
-        <div className="flex min-h-0 w-full overflow-hidden rounded-lg border border-[#3c3c3c] bg-[#252526]">
+      <main className="mx-auto flex h-[calc(100vh-56px)] w-full max-w-[1600px] min-h-0 px-2 pb-2">
+        <div className="flex min-h-0 w-full overflow-hidden bg-[#1b1b1d]">
           <div className="min-w-0 flex-1">
             <WorkLogPanel
               workLogs={workLogs}

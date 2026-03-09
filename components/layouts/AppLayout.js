@@ -30,7 +30,7 @@ export const navMenus = [
     icon: FileText,
   },
   {
-    title: "Job Hunting Tracker",
+    title: "Job Hunting",
     description: "Manage applications and logs",
     href: "/a/applications",
     icon: Briefcase,

@@ -36,7 +36,7 @@ export default function WorkLogSummaryPanel({
   return (
     <div className="w-[480px] border-l border-border bg-background flex flex-col h-full">
       {/* Header */}
-      <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between bg-muted/30">
+      <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between bg-muted/30 h-11">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-primary" />
           <span className="font-semibold text-sm">

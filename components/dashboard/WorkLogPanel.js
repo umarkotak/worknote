@@ -1,8 +1,11 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight, Download } from "lucide-react";
 import api from "@/lib/api";
+
+const COMPOSER_MAX_HEIGHT = 180;
+const ENTRY_MAX_HEIGHT = 280;
 
 function getMonthKey(dateStr) {
   if (!dateStr) return "";
@@ -34,13 +37,25 @@ function formatBubbleDate(dateStr) {
 
   if (date.toDateString() === today.toDateString()) {
     return "Today";
-  } else if (date.toDateString() === yesterday.toDateString()) {
+  }
+
+  if (date.toDateString() === yesterday.toDateString()) {
     return "Yesterday";
   }
+
   return date.toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
     day: "numeric",
+  });
+}
+
+function formatSidebarDate(dateStr) {
+  if (!dateStr) return "";
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    weekday: "short",
   });
 }
 
@@ -53,6 +68,13 @@ function getMonthDateRange(monthKey) {
   return { startDate, endDate };
 }
 
+function resizeTextarea(textarea, maxHeight) {
+  if (!textarea) return;
+  textarea.style.height = "auto";
+  textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`;
+  textarea.style.overflowY = textarea.scrollHeight > maxHeight ? "auto" : "hidden";
+}
+
 export default function WorkLogPanel({
   workLogs = [],
   onSave,
@@ -62,51 +84,69 @@ export default function WorkLogPanel({
 }) {
   const containerRef = useRef(null);
   const bottomRef = useRef(null);
+  const composerRef = useRef(null);
+  const logRefs = useRef({});
+  const entryTextareaRefs = useRef({});
+  const saveTimerRef = useRef({});
+  const pendingBottomScrollRef = useRef(false);
+
   const [content, setContent] = useState("");
-  const [selectedDate, setSelectedDate] = useState(() => {
-    return new Date().toISOString().split("T")[0];
-  });
+  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [editContent, setEditContent] = useState({});
   const [savingLogs, setSavingLogs] = useState({});
   const [collapsedMonths, setCollapsedMonths] = useState({});
+  const [sidebarMonths, setSidebarMonths] = useState({});
   const [downloadingMonth, setDownloadingMonth] = useState(null);
-  const saveTimerRef = useRef({});
+  const [activeLogId, setActiveLogId] = useState(null);
 
-  const sortedLogs = [...workLogs].sort(
-    (a, b) => new Date(a.date) - new Date(b.date)
+  const sortedLogs = useMemo(
+    () => [...workLogs].sort((a, b) => new Date(a.date) - new Date(b.date)),
+    [workLogs]
   );
 
-  useEffect(() => {
-    if (sortedLogs.length > 0 && bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: "instant" });
-    }
-  }, [workLogs.length]);
-
-  const handleEditChange = useCallback((logId, value) => {
-    setEditContent((prev) => ({
-      ...prev,
-      [logId]: value,
-    }));
-
-    if (saveTimerRef.current[logId]) {
-      clearTimeout(saveTimerRef.current[logId]);
-    }
-
-    const log = sortedLogs.find((l) => l.id === logId);
-    setSavingLogs(prev => ({ ...prev, [logId]: true }));
-    saveTimerRef.current[logId] = setTimeout(async () => {
-      try {
-        await onSave({
-          date: formatDateForInput(log.date),
-          content: value,
-        });
-      } catch (error) {
-        toast.error(error.message || "Failed to save");
-      } finally {
-        setSavingLogs(prev => ({ ...prev, [logId]: false }));
+  const monthGroups = useMemo(() => {
+    return sortedLogs.reduce((groups, log) => {
+      const key = getMonthKey(log.date);
+      if (!groups[key]) {
+        groups[key] = {
+          monthKey: key,
+          monthLabel: formatMonthYear(log.date),
+          logs: [],
+        };
       }
-    }, 2000);
-  }, [sortedLogs, onSave]);
+
+      groups[key].logs.push(log);
+      return groups;
+    }, {});
+  }, [sortedLogs]);
+
+  const monthEntries = useMemo(() => Object.values(monthGroups), [monthGroups]);
+
+  const scrollToBottom = useCallback((behavior = "smooth") => {
+    bottomRef.current?.scrollIntoView({ behavior, block: "end" });
+  }, []);
+
+  useEffect(() => {
+    resizeTextarea(composerRef.current, COMPOSER_MAX_HEIGHT);
+  }, [content]);
+
+  useEffect(() => {
+    sortedLogs.forEach((log) => {
+      resizeTextarea(entryTextareaRefs.current[log.id], ENTRY_MAX_HEIGHT);
+    });
+  }, [sortedLogs, editContent]);
+
+  useEffect(() => {
+    if (sortedLogs.length === 0) return;
+
+    if (pendingBottomScrollRef.current) {
+      pendingBottomScrollRef.current = false;
+      scrollToBottom("smooth");
+      return;
+    }
+
+    scrollToBottom("auto");
+  }, [sortedLogs.length, scrollToBottom]);
 
   useEffect(() => {
     return () => {
@@ -114,20 +154,50 @@ export default function WorkLogPanel({
     };
   }, []);
 
+  const handleEditChange = useCallback(
+    (logId, value) => {
+      setEditContent((prev) => ({
+        ...prev,
+        [logId]: value,
+      }));
+
+      if (saveTimerRef.current[logId]) {
+        clearTimeout(saveTimerRef.current[logId]);
+      }
+
+      const log = sortedLogs.find((item) => item.id === logId);
+      if (!log) return;
+
+      setSavingLogs((prev) => ({ ...prev, [logId]: true }));
+
+      saveTimerRef.current[logId] = setTimeout(async () => {
+        try {
+          await onSave({
+            date: formatDateForInput(log.date),
+            content: value,
+          });
+        } catch (error) {
+          toast.error(error.message || "Failed to save");
+        } finally {
+          setSavingLogs((prev) => ({ ...prev, [logId]: false }));
+        }
+      }, 2000);
+    },
+    [onSave, sortedLogs]
+  );
+
   const handleAddLog = async (e) => {
     e.preventDefault();
     if (!content.trim()) return;
 
     try {
+      pendingBottomScrollRef.current = true;
       await onSave({ date: selectedDate, content, append: true });
       setContent("");
       setSelectedDate(new Date().toISOString().split("T")[0]);
       toast.success("Work log added");
-
-      setTimeout(() => {
-        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
     } catch (error) {
+      pendingBottomScrollRef.current = false;
       toast.error(error.message || "Failed to add work log");
     }
   };
@@ -136,6 +206,13 @@ export default function WorkLogPanel({
     setCollapsedMonths((prev) => ({
       ...prev,
       [monthKey]: !prev[monthKey],
+    }));
+  };
+
+  const toggleSidebarMonth = (monthKey) => {
+    setSidebarMonths((prev) => ({
+      ...prev,
+      [monthKey]: prev[monthKey] === false,
     }));
   };
 
@@ -169,165 +246,234 @@ export default function WorkLogPanel({
     }
   };
 
-  return (
-    <div className="flex flex-col h-full">
-      {/* VSCode-style Log List */}
-      <div
-        ref={containerRef}
-        className="flex-1 overflow-y-auto relative"
-      >
-        {sortedLogs.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-muted-foreground p-4">
-            <div className="text-center">
-              <svg
-                className="w-10 h-10 mx-auto mb-2 text-muted-foreground/50"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
-              </svg>
-              <p className="text-xs">No work logs yet</p>
-              <p className="text-xs mt-1 text-muted-foreground">Add your first entry below</p>
-            </div>
-          </div>
-        ) : (
-          sortedLogs.map((log, index) => {
-            const prevLog = index > 0 ? sortedLogs[index - 1] : null;
-            const monthKey = formatMonthYear(log.date);
-            const showMonthHeader = !prevLog ||
-              formatMonthYear(log.date) !== formatMonthYear(prevLog.date);
-            const isCollapsed = collapsedMonths[monthKey];
+  const handleJumpToLog = (log) => {
+    const monthKey = getMonthKey(log.date);
+    setActiveLogId(log.id);
 
-            if (!showMonthHeader && collapsedMonths[formatMonthYear(log.date)]) {
-              return null;
-            }
+    setCollapsedMonths((prev) => ({
+      ...prev,
+      [monthKey]: false,
+    }));
+
+    onMonthSelect?.(monthKey);
+
+    requestAnimationFrame(() => {
+      logRefs.current[log.id]?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    });
+  };
+
+  return (
+    <div className="flex h-full min-h-0 bg-[#1b1b1d] text-[#d4d4d4]">
+      <aside className="hidden w-56 shrink-0 flex-col bg-[#18181a] px-2 py-2 lg:flex">
+        <div className="mb-2 px-1">
+          <p className="text-[11px] uppercase tracking-[0.22em] text-[#6e7681]">Jump to</p>
+          <p className="mt-1 text-xs text-[#9da1a6]">Browse logs by month and date.</p>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+          {monthEntries.map((month) => {
+            const isOpen = sidebarMonths[month.monthKey] !== false;
+            const isActive = selectedMonth === month.monthKey;
 
             return (
-              <React.Fragment key={log.id}>
-                {/* Compact Month Header - VSCode style */}
-                {showMonthHeader && (
-                  <div
-                    className={`sticky top-0 z-10 bg-[#1e1e1e]/95 backdrop-blur-sm border-b border-[#3c3c3c] px-3 py-1 cursor-pointer transition-colors ${
-                      selectedMonth === getMonthKey(log.date)
-                        ? "border-l-2 border-l-[#007acc]"
-                        : "hover:bg-[#2a2a2d]/30"
-                    }`}
-                    onClick={() => onMonthSelect?.(getMonthKey(log.date))}
-                  >
-                    <div className="flex items-center justify-between">
-                      <button
-                        className="flex items-center gap-1.5 hover:bg-[#2a2a2d]/50 rounded px-1.5 py-0.5 -ml-1.5 transition-colors"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleMonthCollapse(monthKey);
-                        }}
-                      >
-                        {isCollapsed ? (
-                          <ChevronRight className="h-3 w-3 text-[#9da1a6]" />
-                        ) : (
-                          <ChevronDown className="h-3 w-3 text-[#9da1a6]" />
-                        )}
-                        <span className="font-medium text-xs text-[#9cdcfe]">
-                          {monthKey}
-                        </span>
-                      </button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-5 w-5 p-0"
-                        title="Download Worklogs"
-                        onClick={(e) => handleDownload(e, getMonthKey(log.date))}
-                        disabled={downloadingMonth === getMonthKey(log.date)}
-                      >
-                        {downloadingMonth === getMonthKey(log.date) ? (
-                          <div className="animate-spin h-3 w-3 border border-[#007acc] border-t-transparent rounded-full" />
-                        ) : (
-                          <Download className="h-3 w-3 text-[#9da1a6]" />
-                        )}
-                      </Button>
-                    </div>
+              <div key={month.monthKey} className="mb-1.5 bg-white/[0.02]">
+                <button
+                  type="button"
+                  className={`flex w-full items-center justify-between px-2 py-1.5 text-left transition-colors ${
+                    isActive ? "bg-[#25292f] text-[#e6edf3]" : "hover:bg-white/[0.04] text-[#b9c0c8]"
+                  }`}
+                  onClick={() => toggleSidebarMonth(month.monthKey)}
+                >
+                  <span className="text-[13px] font-medium">{month.monthLabel}</span>
+                  {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                </button>
+
+                {isOpen && (
+                  <div className="space-y-0.5 pb-0.5">
+                    {month.logs.map((log) => {
+                      const dateKey = formatDateForInput(log.date);
+                      return (
+                        <button
+                          key={dateKey}
+                          type="button"
+                          className="flex w-full items-center justify-between px-2 py-1.5 text-left text-[11px] text-[#8b949e] transition-colors hover:bg-white/[0.05] hover:text-[#d4d4d4]"
+                          onClick={() => handleJumpToLog(log)}
+                        >
+                          <span>{formatSidebarDate(log.date)}</span>
+                          <span className="ml-3 truncate text-[10px] text-[#6e7681]">{dateKey}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
-
-                {/* Compact Log Entry - VSCode style */}
-                {!isCollapsed && (
-                  <div className="px-2 py-0.5 group">
-                    <div
-                      className={`flex gap-2 py-1 hover:bg-[#2a2a2d]/30 rounded px-1.5 transition-colors cursor-pointer ${
-                        selectedMonth === getMonthKey(log.date) ? "bg-[#2a2a2d]/20" : ""
-                      }`}
-                      onClick={() => onMonthSelect?.(getMonthKey(log.date))}
-                    >
-                      {/* Line number style date indicator */}
-                      <div className="flex-shrink-0 w-16 pt-1">
-                        <span className="text-[10px] text-[#6e7681] font-mono select-none">
-                          {formatBubbleDate(log.date)}
-                        </span>
-                      </div>
-
-                      {/* Content area */}
-                      <div className="flex-1 min-w-0">
-                        {savingLogs[log.id] && (
-                          <div className="text-[10px] text-[#6e7681] flex items-center gap-1 mb-0.5">
-                            <div className="animate-spin h-2 w-2 border border-[#007acc] border-t-transparent rounded-full"></div>
-                            <span>Saving...</span>
-                          </div>
-                        )}
-                        <textarea
-                          value={editContent[log.id] ?? log.content}
-                          onChange={(e) => handleEditChange(log.id, e.target.value)}
-                          rows={Math.max(2, (editContent[log.id] ?? log.content).split("\n").length)}
-                          className={`w-full bg-transparent px-0 py-0.5 font-mono text-[12px] leading-[18px] text-[#d4d4d4] resize-none focus:outline-none ${savingLogs[log.id] ? "opacity-70" : ""}`}
-                          placeholder="What did you work on?"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </React.Fragment>
+              </div>
             );
-          })
-        )}
-
-        <div ref={bottomRef} />
-      </div>
-
-      {/* Compact Input Bar at Bottom */}
-      <form
-        onSubmit={handleAddLog}
-        className="shrink-0 border-t border-[#3c3c3c] bg-[#1e1e1e] p-2"
-      >
-        <div className="flex gap-2 items-start">
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="shrink-0 rounded border border-[#3c3c3c] bg-[#252526] px-2 py-1 text-[11px] h-7 text-[#d4d4d4] focus:outline-none focus:ring-1 focus:ring-[#007acc]"
-          />
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="What did you work on? Enter to add..."
-            rows={1}
-            className="flex-1 rounded border border-[#3c3c3c] bg-[#252526] px-2 py-1 text-[12px] h-7 font-mono leading-[18px] text-[#d4d4d4] resize-none focus:outline-none focus:ring-1 focus:ring-[#007acc]"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleAddLog(e);
-              }
-            }}
-          />
-          <Button type="submit" disabled={!content.trim() || isLoading} className="h-7 px-3 text-xs">
-            Add
-          </Button>
+          })}
         </div>
-      </form>
+      </aside>
+
+      <div className="flex min-h-0 flex-1 flex-col bg-[#1b1b1d]">
+        <div ref={containerRef} className="relative flex-1 overflow-y-auto px-0 py-0">
+          {sortedLogs.length === 0 ? (
+            <div className="flex h-full items-center justify-center px-4 text-muted-foreground">
+              <div className="bg-white/[0.02] px-6 py-8 text-center">
+                <svg className="mx-auto mb-3 h-10 w-10 text-muted-foreground/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
+                </svg>
+                <p className="text-sm text-[#d4d4d4]">No work logs yet</p>
+                <p className="mt-1 text-xs text-[#8b949e]">Add your first entry below.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="pb-16">
+              {monthEntries.map((month) => {
+                const isCollapsed = collapsedMonths[month.monthKey];
+                const isActive = selectedMonth === month.monthKey;
+
+                return (
+                  <section key={month.monthKey}>
+                    <div
+                      className={`sticky top-0 z-10 px-3 py-2 backdrop-blur-sm transition-colors ${
+                        isActive ? "bg-[#23262b]" : "bg-[#202225]/96 hover:bg-[#23262b]"
+                      }`}
+                      onClick={() => onMonthSelect?.(month.monthKey)}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <button
+                          type="button"
+                          className="flex items-center gap-2 px-0 py-0 text-sm text-[#d4d4d4] transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleMonthCollapse(month.monthKey);
+                          }}
+                        >
+                          {isCollapsed ? <ChevronRight className="h-4 w-4 text-[#8b949e]" /> : <ChevronDown className="h-4 w-4 text-[#8b949e]" />}
+                          <span className="font-medium">{month.monthLabel}</span>
+                          <span className="px-1.5 py-0 text-[11px] text-[#8b949e]">{month.logs.length}</span>
+                        </button>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-[#8b949e] hover:bg-white/[0.05] hover:text-[#d4d4d4]"
+                          title="Download Worklogs"
+                          onClick={(e) => handleDownload(e, month.monthKey)}
+                          disabled={downloadingMonth === month.monthKey}
+                        >
+                          {downloadingMonth === month.monthKey ? (
+                            <div className="h-3.5 w-3.5 animate-spin rounded-full border border-[#007acc] border-t-transparent" />
+                          ) : (
+                            <Download className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {!isCollapsed && (
+                      <div>
+                        {month.logs.map((log) => {
+                          const value = editContent[log.id] ?? log.content;
+                          const isActiveLog = activeLogId === log.id;
+                          return (
+                            <div
+                              key={log.id}
+                              ref={(node) => {
+                                logRefs.current[log.id] = node;
+                              }}
+                              className={`px-3 py-2 transition-colors ${
+                                isActiveLog
+                                  ? "bg-[#22262b] shadow-[inset_2px_0_0_0_#2f81f7]"
+                                  : isActive
+                                    ? "bg-[#1f2226]"
+                                    : "bg-[#1b1d20] hover:bg-[#1f2226]"
+                              }`}
+                              onClick={() => {
+                                setActiveLogId(log.id);
+                                onMonthSelect?.(month.monthKey);
+                              }}
+                            >
+                              <div className="mb-1 flex items-center justify-between gap-3">
+                                <span className="text-[11px] uppercase tracking-[0.16em] text-[#6e7681]">{formatBubbleDate(log.date)}</span>
+                                {savingLogs[log.id] && (
+                                  <div className="flex items-center gap-1 text-[10px] text-[#6e7681]">
+                                    <div className="h-2.5 w-2.5 animate-spin rounded-full border border-[#007acc] border-t-transparent" />
+                                    <span>Saving</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              <textarea
+                                ref={(node) => {
+                                  entryTextareaRefs.current[log.id] = node;
+                                  resizeTextarea(node, ENTRY_MAX_HEIGHT);
+                                }}
+                                value={value}
+                                onChange={(e) => handleEditChange(log.id, e.target.value)}
+                                onFocus={() => setActiveLogId(log.id)}
+                                className={`min-h-[58px] w-full resize-none bg-transparent px-0 py-1 font-mono text-[13px] leading-6 text-[#d4d4d4] outline-none transition-opacity placeholder:text-[#5f6772] ${
+                                  savingLogs[log.id] ? "opacity-80" : ""
+                                }`}
+                                placeholder="What did you work on?"
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </section>
+                );
+              })}
+            </div>
+          )}
+
+          <div ref={bottomRef} className="h-4" />
+        </div>
+
+        <form onSubmit={handleAddLog} className="shrink-0 bg-[#18181a]/95 px-2 py-2 backdrop-blur sm:px-3">
+          <div className="flex items-end gap-2 bg-[#202225] px-2 py-2">
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="h-10 shrink-0 bg-[#17181b] px-2 text-sm text-[#d4d4d4] outline-none focus:ring-1 focus:ring-[#007acc]"
+            />
+
+            <textarea
+              ref={composerRef}
+              value={content}
+              onChange={(e) => {
+                setContent(e.target.value);
+                resizeTextarea(e.target, COMPOSER_MAX_HEIGHT);
+              }}
+              placeholder="Write your work log. Enter for newline, Shift+Enter to submit."
+              rows={1}
+              className="max-h-[180px] min-h-[40px] flex-1 resize-none bg-[#17181b] px-3 py-2 font-mono text-[13px] leading-6 text-[#d4d4d4] outline-none placeholder:text-[#5f6772] focus:ring-1 focus:ring-[#007acc]"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && e.shiftKey) {
+                  e.preventDefault();
+                  handleAddLog(e);
+                }
+              }}
+            />
+
+            <Button
+              type="submit"
+              disabled={!content.trim() || isLoading}
+              className="h-10 bg-[#007acc] px-4 text-sm font-medium text-white hover:bg-[#0a84d6]"
+            >
+              Add
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

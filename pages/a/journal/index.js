@@ -186,35 +186,35 @@ export default function JournalIndexPage() {
       isLoading={isLoading}
       loadingText="Loading journals..."
     >
-      <main className="mx-auto flex h-[calc(100vh-56px)] w-full max-w-[1600px] min-h-0 p-2">
-        <section className="flex min-h-0 w-full flex-col overflow-hidden rounded-lg border border-[#3c3c3c] bg-[#252526]">
-          <div className="flex items-center justify-between border-b border-[#3c3c3c] px-4 py-3">
+      <main className="mx-auto flex h-[calc(100vh-56px)] w-full max-w-[1600px] min-h-0 px-2 pb-2">
+        <section className="flex min-h-0 w-full flex-col overflow-hidden bg-[#1b1b1d]">
+          <div className="flex items-center justify-between bg-[#202225] px-3 py-2">
             <div>
-              <h1 className="font-[var(--font-heading)] text-xl text-[#f3f3f3]">My Journal</h1>
+              <h1 className="font-[var(--font-heading)] text-lg text-[#f3f3f3]">My Journal</h1>
               <p className="text-xs text-[#9da1a6]">Video notes and reflections</p>
             </div>
             <Button
               type="button"
               onClick={() => setIsCreateOpen(true)}
-              className="h-8 rounded-md bg-[#007acc] px-3 text-xs font-semibold text-white hover:bg-[#0e639c]"
+              className="h-8 bg-[#007acc] px-3 text-xs font-semibold text-white hover:bg-[#0e639c]"
             >
               <Plus className="mr-1.5 h-3.5 w-3.5" />
               Create Journal
             </Button>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto p-3">
+          <div className="min-h-0 flex-1 overflow-y-auto px-0 py-0">
             {isLoadingList ? (
               <div className="flex h-full items-center justify-center text-sm text-[#9da1a6]">Loading journals...</div>
             ) : journals.length === 0 ? (
-              <div className="flex h-full items-center justify-center rounded-md border border-dashed border-[#3c3c3c] bg-[#1f1f1f] text-sm text-[#9da1a6]">
+              <div className="flex h-full items-center justify-center bg-[#1f1f1f] text-sm text-[#9da1a6]">
                 No journals yet. Create your first entry.
               </div>
             ) : (
-              <div className="overflow-hidden rounded-md border border-[#3c3c3c] bg-[#1f1f1f]">
+              <div className="overflow-hidden bg-[#1b1b1d]">
                 <table className="w-full table-fixed border-collapse">
-                  <thead className="sticky top-0 z-10 bg-[#252526]">
-                    <tr className="border-b border-[#3c3c3c]">
+                  <thead className="sticky top-0 z-10 bg-[#202225]">
+                    <tr>
                       <th className="w-28 px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.12em] text-[#9da1a6]">Thumbnail</th>
                       <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.12em] text-[#9da1a6]">Title</th>
                       <th className="w-44 px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.12em] text-[#9da1a6]">Action</th>
@@ -222,9 +222,9 @@ export default function JournalIndexPage() {
                   </thead>
                   <tbody>
                     {journals.map((journal) => (
-                      <tr key={journal.id} className="border-b border-[#303030] align-middle last:border-b-0 hover:bg-[#262629]">
+                      <tr key={journal.id} className="align-middle transition-colors hover:bg-[#1f2226]">
                         <td className="px-3 py-2">
-                          <div className="h-14 w-24 overflow-hidden rounded border border-[#3c3c3c] bg-[#252526]">
+                          <div className="h-14 w-24 overflow-hidden bg-[#202225]">
                             {journal.thumbnail_url ? (
                               <img src={journal.thumbnail_url} alt={journal.title} className="h-full w-full object-cover" />
                             ) : (
@@ -241,7 +241,7 @@ export default function JournalIndexPage() {
                           <div className="flex items-center gap-2">
                             <Link
                               href={`/a/journal/${journal.id}`}
-                              className="inline-flex h-7 items-center gap-1.5 rounded-md border border-[#3c3c3c] bg-[#252526] px-2.5 text-xs font-semibold text-[#9cdcfe] hover:bg-[#2d2d30]"
+                              className="inline-flex h-7 items-center gap-1.5 bg-[#202225] px-2.5 text-xs font-semibold text-[#9cdcfe] hover:bg-[#2a2d31]"
                             >
                               Open
                               <ExternalLink className="h-3 w-3" />
@@ -250,7 +250,7 @@ export default function JournalIndexPage() {
                               type="button"
                               onClick={() => handleDeleteJournal(journal.id)}
                               disabled={deletingId === journal.id}
-                              className="inline-flex h-7 items-center gap-1 rounded-md border border-[#5a1d1d] bg-[#3a1717] px-2.5 text-xs font-semibold text-[#f48771] hover:bg-[#4a1d1d] disabled:cursor-not-allowed disabled:opacity-70"
+                              className="inline-flex h-7 items-center gap-1 bg-[#331b1b] px-2.5 text-xs font-semibold text-[#f48771] hover:bg-[#412020] disabled:cursor-not-allowed disabled:opacity-70"
                             >
                               {deletingId === journal.id ? (
                                 <LoaderCircle className="h-3 w-3 animate-spin" />
@@ -281,13 +281,13 @@ export default function JournalIndexPage() {
 
       {isCreateOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-3">
-          <div ref={modalRef} className="w-full max-w-lg rounded-xl border border-[#3c3c3c] bg-[#252526] shadow-2xl shadow-black/40">
-            <div className="flex items-center justify-between border-b border-[#3c3c3c] px-4 py-3">
+          <div ref={modalRef} className="w-full max-w-lg bg-[#202225] shadow-2xl shadow-black/40">
+            <div className="flex items-center justify-between px-4 py-3">
               <h3 className="font-[var(--font-heading)] text-lg text-[#f3f3f3]">Create Journal</h3>
               <button
                 type="button"
                 onClick={() => !isCreating && setIsCreateOpen(false)}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[#3c3c3c] bg-[#1f1f1f] text-[#9da1a6] hover:bg-[#2d2d30]"
+                className="inline-flex h-7 w-7 items-center justify-center bg-[#1b1d20] text-[#9da1a6] hover:bg-[#2d2d30]"
                 aria-label="Close create journal modal"
               >
                 <X className="h-4 w-4" />
@@ -304,7 +304,7 @@ export default function JournalIndexPage() {
                   value={formData.title}
                   onChange={(e) => handleChange("title", e.target.value)}
                   disabled={isCreating}
-                  className="h-9 w-full rounded-md border border-[#3c3c3c] bg-[#1f1f1f] px-3 text-sm text-[#d4d4d4] outline-none focus:ring-2 focus:ring-[#007acc]/60"
+                  className="h-9 w-full bg-[#17181b] px-3 text-sm text-[#d4d4d4] outline-none focus:ring-1 focus:ring-[#007acc]"
                   placeholder="My YouTube Notes"
                 />
               </div>
@@ -318,7 +318,7 @@ export default function JournalIndexPage() {
                   value={formData.video_url}
                   onChange={(e) => handleChange("video_url", e.target.value)}
                   disabled={isCreating}
-                  className="h-9 w-full rounded-md border border-[#3c3c3c] bg-[#1f1f1f] px-3 text-sm text-[#d4d4d4] outline-none focus:ring-2 focus:ring-[#007acc]/60"
+                  className="h-9 w-full bg-[#17181b] px-3 text-sm text-[#d4d4d4] outline-none focus:ring-1 focus:ring-[#007acc]"
                   placeholder="https://www.youtube.com/watch?v=..."
                 />
               </div>
@@ -331,7 +331,7 @@ export default function JournalIndexPage() {
                   value={formData.content}
                   onChange={(e) => handleChange("content", e.target.value)}
                   disabled={isCreating}
-                  className="w-full rounded-md border border-[#3c3c3c] bg-[#1f1f1f] px-3 py-2 text-sm text-[#d4d4d4] outline-none focus:ring-2 focus:ring-[#007acc]/60"
+                  className="w-full bg-[#17181b] px-3 py-2 text-sm text-[#d4d4d4] outline-none focus:ring-1 focus:ring-[#007acc]"
                   placeholder="Key points from this video..."
                 />
               </div>
@@ -342,7 +342,7 @@ export default function JournalIndexPage() {
                   variant="outline"
                   disabled={isCreating}
                   onClick={() => setIsCreateOpen(false)}
-                  className="h-8 border-[#3c3c3c] bg-[#1f1f1f] text-[#d4d4d4] hover:bg-[#2d2d30]"
+                  className="h-8 bg-[#17181b] text-[#d4d4d4] hover:bg-[#2d2d30]"
                 >
                   Cancel
                 </Button>
