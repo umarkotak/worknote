@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { Inter, Space_Grotesk } from "next/font/google";
-import { Briefcase, BookOpen, ChevronDown, FileText, LayoutDashboard, LogOut, Menu } from "lucide-react";
+import { Briefcase, BookOpen, ChevronDown, ClipboardList, FileText, LayoutDashboard, LogOut, Menu } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -40,6 +40,12 @@ export const navMenus = [
     description: "Video journals and notes",
     href: "/a/journal",
     icon: BookOpen,
+  },
+  {
+    title: "Clipboard",
+    description: "Save and reuse snippets",
+    href: "/a/clipboards",
+    icon: ClipboardList,
   },
 ];
 
