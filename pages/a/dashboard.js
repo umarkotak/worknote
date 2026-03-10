@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useCookies } from "react-cookie";
-import { BookOpen, Briefcase, CalendarClock, ClipboardList, FileText, LoaderCircle, RefreshCw } from "lucide-react";
+import { BookOpen, Briefcase, CalendarClock, ClipboardList, FileText, LoaderCircle, RefreshCw, Wrench } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
@@ -13,6 +13,7 @@ const quickCards = [
   { title: "Job Tracker", subtitle: "Manage opportunities", href: "/a/applications", icon: Briefcase },
   { title: "My Journal", subtitle: "Video learning notes", href: "/a/journal", icon: BookOpen },
   { title: "Clipboard", subtitle: "Keep snippets ready", href: "/a/clipboards", icon: ClipboardList },
+  { title: "Tools", subtitle: "Prompt builders and utilities", href: "/a/tools", icon: Wrench },
 ];
 
 function getTodayData(schedule) {

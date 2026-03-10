@@ -70,6 +70,7 @@ Suggested scale:
 - Keep the main composer anchored to the bottom when writing is the primary action.
 - Sticky section headers should sit flush with the scroll flow and not create awkward top gaps.
 - Prefer flat grouped sections over stacked card grids in productivity views.
+- For new authenticated productivity pages, use `pages/a/worklogs.js` as the primary layout reference before inventing a new shell.
 
 ## Components
 
@@ -161,6 +162,13 @@ The homepage should retain this structure:
 - Logs should read like an editor list, not a stack of cards.
 - Monthly bars should remain sticky and flush to the top.
 - A clicked daily log should keep a quiet persistent active state so the current writing target is easy to track.
+
+## Productivity Page Pattern
+
+- Clipboard, notes, and similar utility pages should inherit the same feel as worklogs: compact, dense, and editor-like.
+- Avoid framed hero sections, rounded card stacks, and decorative panel borders on authenticated tool pages.
+- Use minimal outer padding (`px-2` / `pb-2`) and let tonal surface shifts create structure.
+- Prefer side lists, inline editing, bottom composers, and quiet autosave/status feedback over modal-heavy flows.
 
 ## Implementation Notes
 
