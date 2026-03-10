@@ -1,14 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
-import { useCookies } from "react-cookie";
 import { Copy, Sparkles, WandSparkles } from "lucide-react";
 import { toast } from "react-toastify";
 
-import AppLayout from "@/components/layouts/AppLayout";
+import { useDashboardSession } from "@/components/session/DashboardSessionProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import api from "@/lib/api";
 
 const animationPresets = [
   "idle",
@@ -46,37 +43,8 @@ function toggleArrayValue(values, value) {
 }
 
 export default function SpritesheetPromptPage() {
-  const router = useRouter();
-  const [cookies, , removeCookie] = useCookies(["auth_token"]);
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  useDashboardSession();
   const [form, setForm] = useState(initialForm);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      if (!cookies.auth_token) {
-        router.push("/login");
-        return;
-      }
-
-      const { data, error } = await api.getCurrentUser();
-      if (error) {
-        removeCookie("auth_token", { path: "/" });
-        router.push("/login");
-        return;
-      }
-
-      setUser(data);
-      setIsLoading(false);
-    };
-
-    checkAuth();
-  }, [cookies.auth_token, removeCookie, router]);
-
-  const handleLogout = () => {
-    removeCookie("auth_token", { path: "/" });
-    router.push("/login");
-  };
 
   const generatedPrompt = useMemo(() => {
     const animations = form.animations.length ? form.animations.join(", ") : "idle";
@@ -103,8 +71,7 @@ export default function SpritesheetPromptPage() {
   };
 
   return (
-    <AppLayout user={user} onLogout={handleLogout} isLoading={isLoading} loadingText="Loading spritesheet tool...">
-      <main className="mx-auto min-h-[calc(100vh-56px)] w-full max-w-[1600px] p-2">
+    <main className="mx-auto min-h-[calc(100vh-56px)] w-full max-w-[1600px] p-2">
         <div className="grid gap-2 xl:grid-cols-[0.78fr_1.22fr]">
           <section className="overflow-hidden rounded-lg border border-[#3c3c3c] bg-[#252526]">
             <div className="border-b border-[#3c3c3c] bg-[radial-gradient(circle_at_top_right,_rgba(245,158,11,0.2),_transparent_38%),linear-gradient(180deg,_rgba(30,30,30,0.98),_rgba(37,37,38,0.98))] px-4 py-5">
@@ -314,6 +281,5 @@ export default function SpritesheetPromptPage() {
           </section>
         </div>
       </main>
-    </AppLayout>
   );
 }

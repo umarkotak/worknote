@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
-import { useCookies } from "react-cookie";
 import { BookOpen, Briefcase, CalendarClock, ClipboardList, FileText, LoaderCircle, RefreshCw, Wrench } from "lucide-react";
 
+import { useDashboardSession } from "@/components/session/DashboardSessionProvider";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
-import AppLayout from "@/components/layouts/AppLayout";
 
 const quickCards = [
   { title: "Daily Log", subtitle: "Record your day", href: "/a/worklogs", icon: FileText },
@@ -22,10 +20,7 @@ function getTodayData(schedule) {
 }
 
 export default function DashboardPage() {
-  const router = useRouter();
-  const [cookies, , removeCookie] = useCookies(["auth_token"]);
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useDashboardSession();
 
   const now = new Date();
   const [provinsi, setProvinsi] = useState("Jawa Barat");
@@ -35,27 +30,6 @@ export default function DashboardPage() {
   const [isFetchingSchedule, setIsFetchingSchedule] = useState(false);
   const [scheduleError, setScheduleError] = useState("");
   const [schedulePayload, setSchedulePayload] = useState(null);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      if (!cookies.auth_token) {
-        router.push("/login");
-        return;
-      }
-
-      const { data, error } = await api.getCurrentUser();
-      if (error) {
-        removeCookie("auth_token", { path: "/" });
-        router.push("/login");
-      } else {
-        setUser(data);
-      }
-
-      setIsLoading(false);
-    };
-
-    checkAuth();
-  }, [cookies.auth_token, removeCookie, router]);
 
   const fetchSholatSchedule = async () => {
     setIsFetchingSchedule(true);
@@ -97,21 +71,10 @@ export default function DashboardPage() {
     fetchSholatSchedule();
   }, [user]);
 
-  const handleLogout = () => {
-    removeCookie("auth_token", { path: "/" });
-    router.push("/login");
-  };
-
   const todaySchedule = useMemo(() => getTodayData(schedulePayload?.jadwal || []), [schedulePayload]);
 
   return (
-    <AppLayout
-      user={user}
-      onLogout={handleLogout}
-      isLoading={isLoading}
-      loadingText="Loading dashboard..."
-    >
-      <main className="mx-auto h-[calc(100vh-56px)] w-full max-w-[1600px] p-2">
+    <main className="mx-auto h-[calc(100vh-56px)] w-full max-w-[1600px] p-2">
         <div className="grid h-full min-h-0 gap-2 lg:grid-cols-[0.9fr_1.1fr]">
           <section className="min-h-0 overflow-hidden rounded-lg border border-[#3c3c3c] bg-[#252526] p-3">
             <h1 className="font-[var(--font-heading)] text-xl text-[#f3f3f3]">Dashboard</h1>
@@ -241,6 +204,5 @@ export default function DashboardPage() {
           </section>
         </div>
       </main>
-    </AppLayout>
   );
 }

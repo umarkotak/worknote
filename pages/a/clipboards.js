@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/router";
-import { useCookies } from "react-cookie";
 import { toast } from "react-toastify";
 import { Check, ClipboardCopy, LoaderCircle, Pencil, Search, Trash2, X } from "lucide-react";
 
-import AppLayout from "@/components/layouts/AppLayout";
+import { useDashboardSession } from "@/components/session/DashboardSessionProvider";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
 
@@ -48,10 +46,7 @@ function resizeTextarea(textarea, maxHeight) {
 }
 
 export default function ClipboardsPage() {
-  const router = useRouter();
-  const [cookies, , removeCookie] = useCookies(["auth_token"]);
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useDashboardSession();
 
   const [items, setItems] = useState([]);
   const [searchInput, setSearchInput] = useState("");
@@ -73,27 +68,6 @@ export default function ClipboardsPage() {
   const composerRef = useRef(null);
   const longPressTimerRef = useRef(null);
   const longPressTriggeredRef = useRef(false);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      if (!cookies.auth_token) {
-        router.push("/login");
-        return;
-      }
-
-      const { data, error } = await api.getCurrentUser();
-      if (error) {
-        removeCookie("auth_token", { path: "/" });
-        router.push("/login");
-        return;
-      }
-
-      setUser(data);
-      setIsLoading(false);
-    };
-
-    checkAuth();
-  }, [cookies.auth_token, removeCookie, router]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -186,11 +160,6 @@ export default function ClipboardsPage() {
     setDraft(toDraft(activeItem));
     setShowTitleField(Boolean(activeItem.title));
   }, [editingId, items]);
-
-  const handleLogout = useCallback(() => {
-    removeCookie("auth_token", { path: "/" });
-    router.push("/login");
-  }, [removeCookie, router]);
 
   const clearLongPress = () => {
     if (longPressTimerRef.current) {
@@ -344,13 +313,7 @@ export default function ClipboardsPage() {
   }, [selectedIds.length, selectionMode]);
 
   return (
-    <AppLayout
-      user={user}
-      onLogout={handleLogout}
-      isLoading={isLoading}
-      loadingText="Loading clipboard..."
-    >
-      <main className="mx-auto flex h-[calc(100vh-56px)] w-full max-w-[960px] min-h-0 px-0 pb-0 sm:px-2 sm:pb-2">
+    <main className="mx-auto flex h-[calc(100vh-56px)] w-full max-w-[960px] min-h-0 px-0 pb-0 sm:px-2 sm:pb-2">
         <div className="flex min-h-0 w-full flex-col bg-[#1b1b1d] text-[#d4d4d4]">
           <div className="sticky top-0 z-20 bg-[#18181a]/95 px-2 py-2 backdrop-blur sm:px-3">
             <div className="space-y-2 bg-[#202225] px-2 py-2 sm:px-3">
@@ -562,6 +525,5 @@ export default function ClipboardsPage() {
           </form>
         </div>
       </main>
-    </AppLayout>
   );
 }

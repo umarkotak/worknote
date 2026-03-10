@@ -2,9 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
-import { useCookies } from "react-cookie";
 import { toast } from "react-toastify";
-import { Inter, Space_Grotesk } from "next/font/google";
 import {
   ArrowLeft,
   BookOpen,
@@ -32,21 +30,13 @@ import {
 } from "lucide-react";
 
 import api from "@/lib/api";
+import { useDashboardSession } from "@/components/session/DashboardSessionProvider";
 import { Button } from "@/components/ui/button";
+import { bodyFont, headingFont } from "@/lib/fonts";
 
 const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 import "react-quill-new/dist/quill.snow.css";
-
-const headingFont = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-heading",
-});
-
-const bodyFont = Inter({
-  subsets: ["latin"],
-  variable: "--font-body",
-});
 
 const navMenus = [
   {
@@ -152,10 +142,7 @@ function formatTime(seconds) {
 export default function JournalDetailPage() {
   const router = useRouter();
   const { id } = router.query;
-  const [cookies, , removeCookie] = useCookies(["auth_token"]);
-
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isLoading, logout } = useDashboardSession();
   const [journal, setJournal] = useState(null);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -267,27 +254,6 @@ export default function JournalDetailPage() {
     document.addEventListener("pointerdown", onOutside);
     return () => document.removeEventListener("pointerdown", onOutside);
   }, []);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      if (!cookies.auth_token) {
-        router.push("/login");
-        return;
-      }
-
-      const { data, error } = await api.getCurrentUser();
-      if (error) {
-        removeCookie("auth_token", { path: "/" });
-        router.push("/login");
-        return;
-      }
-
-      setUser(data);
-      setIsLoading(false);
-    };
-
-    checkAuth();
-  }, [cookies.auth_token, removeCookie, router]);
 
   useEffect(() => {
     if (!isQuranDrawerOpen || quranSurahList.length > 0 || isQuranListLoading) {
@@ -635,11 +601,6 @@ export default function JournalDetailPage() {
     document.body.removeChild(anchor);
   };
 
-  const handleLogout = () => {
-    removeCookie("auth_token", { path: "/" });
-    router.push("/login");
-  };
-
   const performSave = useCallback(async () => {
     if (!journal?.id || isSaving) return;
     if (editorHtml === lastSavedContentRef.current) {
@@ -810,7 +771,7 @@ export default function JournalDetailPage() {
     "link",
   ];
 
-  if (isLoading || !journal) {
+  if (isLoading || !user || !journal) {
     return (
       <div
         className={`${bodyFont.className} min-h-screen bg-[#1e1e1e] text-[#d4d4d4] flex items-center justify-center`}
@@ -937,7 +898,7 @@ export default function JournalDetailPage() {
                   type="button"
                   variant="ghost"
                   className="mt-1 h-9 w-full justify-start gap-2 rounded-md px-3 text-sm text-[#f48771] hover:bg-[#3a1717] hover:text-[#ffb4a5]"
-                  onClick={handleLogout}
+                  onClick={logout}
                 >
                   <LogOut className="h-4 w-4" />
                   Logout

@@ -1,14 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
-import { useCookies } from "react-cookie";
 import { Download, Pause, Play, ScanSearch, SkipBack, SkipForward, SplitSquareVertical, Upload } from "lucide-react";
 import { toast } from "react-toastify";
 
-import AppLayout from "@/components/layouts/AppLayout";
+import { useDashboardSession } from "@/components/session/DashboardSessionProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import api from "@/lib/api";
 
 const initialSettings = {
   mode: "auto",
@@ -436,10 +433,7 @@ function drawAnimationPlayer(canvas, frames, currentFrame, scale, cellPadding) {
 }
 
 export default function SpritesheetPlayerPage() {
-  const router = useRouter();
-  const [cookies, , removeCookie] = useCookies(["auth_token"]);
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  useDashboardSession();
   const [settings, setSettings] = useState(initialSettings);
   const [imageMeta, setImageMeta] = useState(null);
   const [sprites, setSprites] = useState([]);
@@ -455,27 +449,6 @@ export default function SpritesheetPlayerPage() {
   const outputCanvasRef = useRef(null);
   const playerCanvasRef = useRef(null);
   const previewBoxesRef = useRef([]);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      if (!cookies.auth_token) {
-        router.push("/login");
-        return;
-      }
-
-      const { data, error } = await api.getCurrentUser();
-      if (error) {
-        removeCookie("auth_token", { path: "/" });
-        router.push("/login");
-        return;
-      }
-
-      setUser(data);
-      setIsLoading(false);
-    };
-
-    checkAuth();
-  }, [cookies.auth_token, removeCookie, router]);
 
   useEffect(() => {
     createPlaceholder(sourceCanvasRef.current, "Upload a spritesheet to begin.");
@@ -537,11 +510,6 @@ export default function SpritesheetPlayerPage() {
 
     return () => window.clearInterval(intervalId);
   }, [isPlaying, normalizedFrames.length, settings.fps, settings.loop]);
-
-  const handleLogout = () => {
-    removeCookie("auth_token", { path: "/" });
-    router.push("/login");
-  };
 
   const selectionStatus = useMemo(
     () => `Detected: ${sprites.length} | Selected: ${selectedIndices.length}`,
@@ -691,8 +659,7 @@ export default function SpritesheetPlayerPage() {
   };
 
   return (
-    <AppLayout user={user} onLogout={handleLogout} isLoading={isLoading} loadingText="Loading spritesheet player...">
-      <main className="mx-auto min-h-[calc(100vh-56px)] w-full max-w-[1600px] p-2">
+    <main className="mx-auto min-h-[calc(100vh-56px)] w-full max-w-[1600px] p-2">
         <div className="grid gap-2 xl:grid-cols-[0.8fr_1.2fr]">
           <section className="overflow-hidden rounded-lg border border-[#3c3c3c] bg-[#252526]">
             <div className="border-b border-[#3c3c3c] bg-[radial-gradient(circle_at_top_right,_rgba(0,122,204,0.2),_transparent_38%),linear-gradient(180deg,_rgba(30,30,30,0.98),_rgba(37,37,38,0.98))] px-4 py-5">
@@ -914,6 +881,5 @@ export default function SpritesheetPlayerPage() {
           </section>
         </div>
       </main>
-    </AppLayout>
   );
 }

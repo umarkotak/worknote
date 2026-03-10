@@ -1,20 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { Inter, Space_Grotesk } from "next/font/google";
 import { Briefcase, BookOpen, ChevronDown, ClipboardList, FileText, LayoutDashboard, LogOut, Menu, Wrench } from "lucide-react";
 
+import { useDashboardSession } from "@/components/session/DashboardSessionProvider";
 import { Button } from "@/components/ui/button";
-
-const headingFont = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-heading",
-});
-
-const bodyFont = Inter({
-  subsets: ["latin"],
-  variable: "--font-body",
-});
+import { bodyFont, headingFont } from "@/lib/fonts";
 
 export const navMenus = [
   {
@@ -55,14 +46,13 @@ export const navMenus = [
   },
 ];
 
-export default function AppLayout({
-  user,
-  onLogout,
-  isLoading = false,
-  loadingText = "Loading...",
-  children,
-}) {
+function isActiveRoute(pathname, href) {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+export default function AppLayout({ children }) {
   const router = useRouter();
+  const { user, isLoading, logout } = useDashboardSession();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const centerMenuRef = useRef(null);
@@ -84,10 +74,10 @@ export default function AppLayout({
 
   const userInitial = (user?.name || user?.email || "U").trim().charAt(0).toUpperCase();
 
-  if (isLoading) {
+  if (isLoading || !user) {
     return (
       <div className={`${bodyFont.className} min-h-screen bg-[#1e1e1e] text-[#d4d4d4] flex items-center justify-center`}>
-        <div className="text-sm text-[#9da1a6]">{loadingText}</div>
+        <div className="text-sm text-[#9da1a6]">Loading workspace...</div>
       </div>
     );
   }
@@ -128,11 +118,11 @@ export default function AppLayout({
           </div>
 
           {/* Desktop nav - visible on xl screens */}
-          <nav className="hidden xl:flex flex-1 justify-center items-center gap-1">
-            {navMenus.map((item) => {
-              const isActive = router.pathname === item.href;
-              const Icon = item.icon;
-              return (
+            <nav className="hidden xl:flex flex-1 justify-center items-center gap-1">
+              {navMenus.map((item) => {
+                const isActive = isActiveRoute(router.pathname, item.href);
+                const Icon = item.icon;
+                return (
                 <Link
                   key={item.title}
                   href={item.href}
@@ -170,7 +160,7 @@ export default function AppLayout({
                 </div>
                 <div className="max-h-[60vh] overflow-y-auto py-1">
                   {navMenus.map((item) => {
-                    const isActive = router.pathname === item.href;
+                    const isActive = isActiveRoute(router.pathname, item.href);
                     const Icon = item.icon;
 
                     return (
@@ -220,7 +210,7 @@ export default function AppLayout({
                   type="button"
                   variant="ghost"
                   className="mt-1 h-8 w-full justify-start gap-2 rounded-md px-3 text-sm text-[#f48771] hover:bg-[#3a1717] hover:text-[#ffb4a5]"
-                  onClick={onLogout}
+                  onClick={logout}
                 >
                   <LogOut className="h-4 w-4" />
                   Logout
@@ -235,5 +225,3 @@ export default function AppLayout({
     </div>
   );
 }
-
-export { bodyFont, headingFont };

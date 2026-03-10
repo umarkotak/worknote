@@ -1,13 +1,11 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
-import { useCookies } from "react-cookie";
 import { toast } from "react-toastify";
 import { ExternalLink, LoaderCircle, Plus, Trash2, X } from "lucide-react";
 
+import { useDashboardSession } from "@/components/session/DashboardSessionProvider";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
-import AppLayout from "@/components/layouts/AppLayout";
 
 const PAGE_LIMIT = 10;
 
@@ -21,10 +19,7 @@ function formatDate(iso) {
 }
 
 export default function JournalIndexPage() {
-  const router = useRouter();
-  const [cookies, , removeCookie] = useCookies(["auth_token"]);
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useDashboardSession();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const modalRef = useRef(null);
@@ -87,27 +82,6 @@ export default function JournalIndexPage() {
   }, [isCreateOpen]);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      if (!cookies.auth_token) {
-        router.push("/login");
-        return;
-      }
-
-      const { data, error } = await api.getCurrentUser();
-      if (error) {
-        removeCookie("auth_token", { path: "/" });
-        router.push("/login");
-      } else {
-        setUser(data);
-      }
-
-      setIsLoading(false);
-    };
-
-    checkAuth();
-  }, [cookies.auth_token, removeCookie, router]);
-
-  useEffect(() => {
     if (!user) return;
     fetchJournals(1, true);
   }, [user, fetchJournals]);
@@ -128,11 +102,6 @@ export default function JournalIndexPage() {
     observer.observe(sentinelRef.current);
     return () => observer.disconnect();
   }, [fetchJournals, hasMore, isLoadingList, isLoadingMore, page, user]);
-
-  const handleLogout = () => {
-    removeCookie("auth_token", { path: "/" });
-    router.push("/login");
-  };
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -180,12 +149,7 @@ export default function JournalIndexPage() {
   };
 
   return (
-    <AppLayout
-      user={user}
-      onLogout={handleLogout}
-      isLoading={isLoading}
-      loadingText="Loading journals..."
-    >
+    <>
       <main className="mx-auto flex h-[calc(100vh-56px)] w-full max-w-[1600px] min-h-0 px-2 pb-2">
         <section className="flex min-h-0 w-full flex-col overflow-hidden bg-[#1b1b1d]">
           <div className="flex items-center justify-between bg-[#202225] px-3 py-2">
@@ -365,6 +329,6 @@ export default function JournalIndexPage() {
           </div>
         </div>
       )}
-    </AppLayout>
+    </>
   );
 }

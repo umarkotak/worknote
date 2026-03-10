@@ -1,19 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/router";
-import { useCookies } from "react-cookie";
 import { toast } from "react-toastify";
 
+import { useDashboardSession } from "@/components/session/DashboardSessionProvider";
 import api from "@/lib/api";
-import AppLayout from "@/components/layouts/AppLayout";
 import TreeView from "@/components/dashboard/TreeView";
 import DetailPanel from "@/components/dashboard/DetailPanel";
 import JobApplicationForm from "@/components/dashboard/JobApplicationForm";
 
 export default function ApplicationsPage() {
-  const router = useRouter();
-  const [cookies, , removeCookie] = useCookies(["auth_token"]);
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useDashboardSession();
 
   const [applications, setApplications] = useState([]);
   const [applicationLogs, setApplicationLogs] = useState({});
@@ -24,27 +19,6 @@ export default function ApplicationsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      if (!cookies.auth_token) {
-        router.push("/login");
-        return;
-      }
-
-      const { data, error } = await api.getCurrentUser();
-      if (error) {
-        removeCookie("auth_token", { path: "/" });
-        router.push("/login");
-      } else {
-        setUser(data);
-      }
-
-      setIsLoading(false);
-    };
-
-    checkAuth();
-  }, [router, cookies.auth_token, removeCookie]);
 
   const loadApplications = useCallback(async () => {
     const { data, error } = await api.listJobApplications({
@@ -174,21 +148,10 @@ export default function ApplicationsPage() {
     await loadLogsForApplication(selectedApplication.id);
   };
 
-  const handleLogout = () => {
-    removeCookie("auth_token", { path: "/" });
-    router.push("/login");
-  };
-
   const currentLogs = selectedApplication ? applicationLogs[selectedApplication.id] || [] : [];
 
   return (
-    <AppLayout
-      user={user}
-      onLogout={handleLogout}
-      isLoading={isLoading}
-      loadingText="Loading applications..."
-    >
-      <main className="mx-auto flex h-[calc(100vh-56px)] w-full max-w-[1600px] min-h-0 p-2">
+    <main className="mx-auto flex h-[calc(100vh-56px)] w-full max-w-[1600px] min-h-0 p-2">
         <div className="flex min-h-0 w-full overflow-hidden rounded-lg border border-[#3c3c3c] bg-[#252526]">
           <div className="w-[360px] border-r border-[#3c3c3c] bg-[#1f1f1f] min-h-0">
             {showForm ? (
@@ -234,6 +197,5 @@ export default function ApplicationsPage() {
           </div>
         </div>
       </main>
-    </AppLayout>
   );
 }

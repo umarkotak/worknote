@@ -1,18 +1,13 @@
 import { useState, useEffect } from "react";
-import { useRouter } from "next/router";
-import { useCookies } from "react-cookie";
 import { toast } from "react-toastify";
 
+import { useDashboardSession } from "@/components/session/DashboardSessionProvider";
 import api from "@/lib/api";
-import AppLayout from "@/components/layouts/AppLayout";
 import WorkLogPanel from "@/components/dashboard/WorkLogPanel";
 import WorkLogSummaryPanel from "@/components/dashboard/WorkLogSummaryPanel";
 
 export default function WorkLogsPage() {
-  const router = useRouter();
-  const [cookies, , removeCookie] = useCookies(["auth_token"]);
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useDashboardSession();
 
   const [workLogs, setWorkLogs] = useState([]);
   const [isSaving] = useState(false);
@@ -21,27 +16,6 @@ export default function WorkLogsPage() {
   const [summaryData, setSummaryData] = useState(null);
   const [isLoadingSummary, setIsLoadingSummary] = useState(false);
   const [summaryError, setSummaryError] = useState(null);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      if (!cookies.auth_token) {
-        router.push("/login");
-        return;
-      }
-
-      const { data, error } = await api.getCurrentUser();
-      if (error) {
-        removeCookie("auth_token", { path: "/" });
-        router.push("/login");
-      } else {
-        setUser(data);
-      }
-
-      setIsLoading(false);
-    };
-
-    checkAuth();
-  }, [router, cookies.auth_token, removeCookie]);
 
   useEffect(() => {
     if (!user) return;
@@ -118,19 +92,8 @@ export default function WorkLogsPage() {
     setSummaryError(null);
   };
 
-  const handleLogout = () => {
-    removeCookie("auth_token", { path: "/" });
-    router.push("/login");
-  };
-
   return (
-    <AppLayout
-      user={user}
-      onLogout={handleLogout}
-      isLoading={isLoading}
-      loadingText="Loading daily logs..."
-    >
-      <main className="mx-auto flex h-[calc(100vh-56px)] w-full max-w-[1600px] min-h-0 px-2 pb-2">
+    <main className="mx-auto flex h-[calc(100vh-56px)] w-full max-w-[1600px] min-h-0 px-2 pb-2">
         <div className="flex min-h-0 w-full overflow-hidden bg-[#1b1b1d]">
           <div className="min-w-0 flex-1">
             <WorkLogPanel
@@ -154,6 +117,5 @@ export default function WorkLogsPage() {
           )}
         </div>
       </main>
-    </AppLayout>
   );
 }
