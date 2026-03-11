@@ -151,16 +151,16 @@ export default function JournalIndexPage() {
   return (
     <>
       <main className="mx-auto flex h-[calc(100vh-56px)] w-full max-w-[1600px] min-h-0 px-2 pb-2">
-        <section className="flex min-h-0 w-full flex-col overflow-hidden bg-[#1b1b1d]">
-          <div className="flex items-center justify-between bg-[#202225] px-3 py-2">
+        <section className="paper-panel flex min-h-0 w-full flex-col overflow-hidden rounded-2xl bg-[var(--surface-canvas)]">
+          <div className="flex items-center justify-between border-b border-border bg-card px-3 py-2">
             <div>
-              <h1 className="font-[var(--font-heading)] text-lg text-[#f3f3f3]">My Journal</h1>
-              <p className="text-xs text-[#9da1a6]">Video notes and reflections</p>
+              <h1 className="font-[var(--font-heading)] text-lg text-[var(--ink-strong)]">My Journal</h1>
+              <p className="text-xs text-muted-foreground">Video notes and reflections</p>
             </div>
             <Button
               type="button"
               onClick={() => setIsCreateOpen(true)}
-              className="h-8 bg-[#007acc] px-3 text-xs font-semibold text-white hover:bg-[#0e639c]"
+              className="h-8 px-3 text-xs font-semibold"
             >
               <Plus className="mr-1.5 h-3.5 w-3.5" />
               Create Journal
@@ -169,53 +169,53 @@ export default function JournalIndexPage() {
 
           <div className="min-h-0 flex-1 overflow-y-auto px-0 py-0">
             {isLoadingList ? (
-              <div className="flex h-full items-center justify-center text-sm text-[#9da1a6]">Loading journals...</div>
-            ) : journals.length === 0 ? (
-              <div className="flex h-full items-center justify-center bg-[#1f1f1f] text-sm text-[#9da1a6]">
-                No journals yet. Create your first entry.
-              </div>
-            ) : (
-              <div className="overflow-hidden bg-[#1b1b1d]">
-                <table className="w-full table-fixed border-collapse">
-                  <thead className="sticky top-0 z-10 bg-[#202225]">
-                    <tr>
-                      <th className="w-28 px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.12em] text-[#9da1a6]">Thumbnail</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.12em] text-[#9da1a6]">Title</th>
-                      <th className="w-44 px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.12em] text-[#9da1a6]">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {journals.map((journal) => (
-                      <tr key={journal.id} className="align-middle transition-colors hover:bg-[#1f2226]">
-                        <td className="px-3 py-2">
-                          <div className="h-14 w-24 overflow-hidden bg-[#202225]">
-                            {journal.thumbnail_url ? (
-                              <img src={journal.thumbnail_url} alt={journal.title} className="h-full w-full object-cover" />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center text-[11px] text-[#8f9397]">No image</div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-3 py-2">
-                          <p className="truncate text-sm font-semibold text-[#e8e8e8]">{journal.title}</p>
-                          <p className="mt-0.5 truncate text-xs text-[#b4b4b4]">{journal.video_title || "Untitled video"}</p>
-                          <p className="mt-0.5 truncate text-xs text-[#8f9397]">{formatDate(journal.created_at)}</p>
-                        </td>
-                        <td className="px-3 py-2">
-                          <div className="flex items-center gap-2">
-                            <Link
-                              href={`/a/journal/${journal.id}`}
-                              className="inline-flex h-7 items-center gap-1.5 bg-[#202225] px-2.5 text-xs font-semibold text-[#9cdcfe] hover:bg-[#2a2d31]"
-                            >
-                              Open
-                              <ExternalLink className="h-3 w-3" />
+                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Loading journals...</div>
+              ) : journals.length === 0 ? (
+                <div className="flex h-full items-center justify-center bg-[var(--surface-1)] text-sm text-muted-foreground">
+                  No journals yet. Create your first entry.
+                </div>
+              ) : (
+                <div className="overflow-hidden bg-[var(--surface-canvas)]">
+                  <table className="w-full table-fixed border-collapse">
+                    <thead className="sticky top-0 z-10 bg-card">
+                      <tr>
+                        <th className="w-28 px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Thumbnail</th>
+                        <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Title</th>
+                        <th className="w-44 px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {journals.map((journal) => (
+                        <tr key={journal.id} className="align-middle transition-colors hover:bg-[var(--surface-2)]">
+                          <td className="px-3 py-2">
+                            <div className="h-14 w-24 overflow-hidden rounded-md bg-[var(--surface-1)]">
+                              {journal.thumbnail_url ? (
+                                <img src={journal.thumbnail_url} alt={journal.title} className="h-full w-full object-cover" />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center text-[11px] text-muted-foreground">No image</div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-3 py-2">
+                            <p className="truncate text-sm font-semibold text-[var(--ink-strong)]">{journal.title}</p>
+                            <p className="mt-0.5 truncate text-xs text-foreground">{journal.video_title || "Untitled video"}</p>
+                            <p className="mt-0.5 truncate text-xs text-muted-foreground">{formatDate(journal.created_at)}</p>
+                          </td>
+                          <td className="px-3 py-2">
+                            <div className="flex items-center gap-2">
+                              <Link
+                                href={`/a/journal/${journal.id}`}
+                                className="inline-flex h-7 items-center gap-1.5 rounded-md bg-[var(--surface-1)] px-2.5 text-xs font-semibold text-primary hover:bg-[var(--surface-2)]"
+                              >
+                                Open
+                                <ExternalLink className="h-3 w-3" />
                             </Link>
                             <button
-                              type="button"
-                              onClick={() => handleDeleteJournal(journal.id)}
-                              disabled={deletingId === journal.id}
-                              className="inline-flex h-7 items-center gap-1 bg-[#331b1b] px-2.5 text-xs font-semibold text-[#f48771] hover:bg-[#412020] disabled:cursor-not-allowed disabled:opacity-70"
-                            >
+                                type="button"
+                                onClick={() => handleDeleteJournal(journal.id)}
+                                disabled={deletingId === journal.id}
+                                className="inline-flex h-7 items-center gap-1 rounded-md bg-[var(--danger-soft)] px-2.5 text-xs font-semibold text-destructive hover:bg-[var(--danger-soft)] disabled:cursor-not-allowed disabled:opacity-70"
+                              >
                               {deletingId === journal.id ? (
                                 <LoaderCircle className="h-3 w-3 animate-spin" />
                               ) : (
@@ -232,7 +232,7 @@ export default function JournalIndexPage() {
 
                 <div ref={sentinelRef} className="h-2" />
                 {isLoadingMore && (
-                  <div className="flex items-center justify-center py-2 text-xs text-[#9da1a6]">
+                  <div className="flex items-center justify-center py-2 text-xs text-muted-foreground">
                     <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
                     Loading more...
                   </div>

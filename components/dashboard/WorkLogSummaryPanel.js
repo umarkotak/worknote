@@ -34,12 +34,12 @@ export default function WorkLogSummaryPanel({
   const hasSummary = summary && summary.summary;
 
   return (
-    <div className="w-[480px] border-l border-border bg-background flex flex-col h-full">
-      {/* Header */}
-      <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between bg-muted/30 h-11">
+    <div className="flex h-full w-[480px] flex-col border-l border-border bg-[var(--surface-canvas)]">
+      <div className="shrink-0 border-b border-border bg-card px-4 py-3 shadow-[var(--shadow-sm)]">
+        <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-primary" />
-          <span className="font-semibold text-sm">
+          <span className="text-sm font-semibold text-[var(--ink-strong)]">
             {formatMonthDisplay(selectedMonth)} Summary
           </span>
         </div>
@@ -51,9 +51,9 @@ export default function WorkLogSummaryPanel({
         >
           <X className="h-4 w-4" />
         </Button>
+        </div>
       </div>
 
-      {/* Content */}
       <div className="flex-1 overflow-y-auto p-4">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
@@ -63,7 +63,7 @@ export default function WorkLogSummaryPanel({
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-            <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-3">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--danger-soft)]">
               <span className="text-2xl">⚠️</span>
             </div>
             <p className="text-sm text-center">{error}</p>
@@ -79,12 +79,10 @@ export default function WorkLogSummaryPanel({
           </div>
         ) : hasSummary ? (
           <div className="space-y-4">
-            {/* Summary Content */}
-            <div className="prose prose-sm max-w-none text-foreground prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-code:text-foreground prose-li:text-foreground prose-a:text-primary">
+            <div className="paper-panel prose prose-sm max-w-none rounded-xl p-4 text-foreground prose-headings:text-[var(--ink-strong)] prose-p:text-foreground prose-strong:text-[var(--ink-strong)] prose-code:text-foreground prose-li:text-foreground prose-a:text-primary">
               <Markdown>{summary.summary}</Markdown>
             </div>
 
-            {/* Metadata */}
             <div className="pt-4 border-t border-border">
               <p className="text-xs text-muted-foreground">
                 Generated: {formatTimestamp(summary.created_at)}
@@ -96,7 +94,6 @@ export default function WorkLogSummaryPanel({
               )}
             </div>
 
-            {/* Regenerate Button */}
             <Button
               variant="outline"
               size="sm"
@@ -109,13 +106,13 @@ export default function WorkLogSummaryPanel({
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--surface-2)]">
               <Sparkles className="h-8 w-8 text-muted-foreground/50" />
             </div>
-            <p className="text-sm font-medium text-foreground mb-1">
+            <p className="mb-1 text-sm font-medium text-foreground">
               No summary yet
             </p>
-            <p className="text-xs text-center mb-4 max-w-[200px]">
+            <p className="mb-4 max-w-[200px] text-center text-xs">
               Generate an AI-powered summary of your work logs for{" "}
               {formatMonthDisplay(selectedMonth)}
             </p>

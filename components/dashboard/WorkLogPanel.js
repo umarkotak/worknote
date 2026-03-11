@@ -266,11 +266,11 @@ export default function WorkLogPanel({
   };
 
   return (
-    <div className="flex h-full min-h-0 bg-[#1b1b1d] text-[#d4d4d4]">
-      <aside className="hidden w-56 shrink-0 flex-col bg-[#18181a] px-2 py-2 lg:flex">
+    <div className="flex h-full min-h-0 bg-[var(--surface-canvas)] text-foreground">
+      <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-[var(--surface-1)] px-2 py-2 lg:flex">
         <div className="mb-2 px-1">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-[#6e7681]">Jump to</p>
-          <p className="mt-1 text-xs text-[#9da1a6]">Browse logs by month and date.</p>
+          <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Jump to</p>
+          <p className="mt-1 text-xs text-muted-foreground">Browse logs by month and date.</p>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto pr-1">
@@ -279,11 +279,11 @@ export default function WorkLogPanel({
             const isActive = selectedMonth === month.monthKey;
 
             return (
-              <div key={month.monthKey} className="mb-1.5 bg-white/[0.02]">
+              <div key={month.monthKey} className="paper-panel-soft mb-1.5 rounded-lg">
                 <button
                   type="button"
                   className={`flex w-full items-center justify-between px-2 py-1.5 text-left transition-colors ${
-                    isActive ? "bg-[#25292f] text-[#e6edf3]" : "hover:bg-white/[0.04] text-[#b9c0c8]"
+                    isActive ? "bg-[var(--surface-3)] text-[var(--ink-strong)]" : "text-foreground hover:bg-[var(--surface-2)]"
                   }`}
                   onClick={() => toggleSidebarMonth(month.monthKey)}
                 >
@@ -299,11 +299,11 @@ export default function WorkLogPanel({
                         <button
                           key={dateKey}
                           type="button"
-                          className="flex w-full items-center justify-between px-2 py-1.5 text-left text-[11px] text-[#8b949e] transition-colors hover:bg-white/[0.05] hover:text-[#d4d4d4]"
+                          className="flex w-full items-center justify-between px-2 py-1.5 text-left text-[11px] text-muted-foreground transition-colors hover:bg-[var(--surface-2)] hover:text-foreground"
                           onClick={() => handleJumpToLog(log)}
                         >
                           <span>{formatSidebarDate(log.date)}</span>
-                          <span className="ml-3 truncate text-[10px] text-[#6e7681]">{dateKey}</span>
+                          <span className="ml-3 truncate text-[10px] text-[var(--ink-faint)]">{dateKey}</span>
                         </button>
                       );
                     })}
@@ -315,11 +315,11 @@ export default function WorkLogPanel({
         </div>
       </aside>
 
-      <div className="flex min-h-0 flex-1 flex-col bg-[#1b1b1d]">
+      <div className="flex min-h-0 flex-1 flex-col bg-[var(--surface-canvas)]">
         <div ref={containerRef} className="relative flex-1 overflow-y-auto px-0 py-0">
           {sortedLogs.length === 0 ? (
             <div className="flex h-full items-center justify-center px-4 text-muted-foreground">
-              <div className="bg-white/[0.02] px-6 py-8 text-center">
+              <div className="paper-panel rounded-xl px-6 py-8 text-center">
                 <svg className="mx-auto mb-3 h-10 w-10 text-muted-foreground/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
@@ -328,8 +328,8 @@ export default function WorkLogPanel({
                     d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
                   />
                 </svg>
-                <p className="text-sm text-[#d4d4d4]">No work logs yet</p>
-                <p className="mt-1 text-xs text-[#8b949e]">Add your first entry below.</p>
+                <p className="text-sm text-foreground">No work logs yet</p>
+                <p className="mt-1 text-xs text-muted-foreground">Add your first entry below.</p>
               </div>
             </div>
           ) : (
@@ -342,34 +342,34 @@ export default function WorkLogPanel({
                   <section key={month.monthKey}>
                     <div
                       className={`sticky top-0 z-10 px-3 py-2 backdrop-blur-sm transition-colors ${
-                        isActive ? "bg-[#23262b]" : "bg-[#202225]/96 hover:bg-[#23262b]"
+                        isActive ? "bg-[rgba(229,203,186,0.85)]" : "bg-[rgba(250,245,236,0.94)] hover:bg-[var(--surface-2)]"
                       }`}
                       onClick={() => onMonthSelect?.(month.monthKey)}
                     >
                       <div className="flex items-center justify-between gap-3">
                         <button
                           type="button"
-                          className="flex items-center gap-2 px-0 py-0 text-sm text-[#d4d4d4] transition-colors"
+                          className="flex items-center gap-2 px-0 py-0 text-sm text-foreground transition-colors"
                           onClick={(e) => {
                             e.stopPropagation();
                             toggleMonthCollapse(month.monthKey);
                           }}
                         >
-                          {isCollapsed ? <ChevronRight className="h-4 w-4 text-[#8b949e]" /> : <ChevronDown className="h-4 w-4 text-[#8b949e]" />}
+                          {isCollapsed ? <ChevronRight className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                           <span className="font-medium">{month.monthLabel}</span>
-                          <span className="px-1.5 py-0 text-[11px] text-[#8b949e]">{month.logs.length}</span>
+                          <span className="px-1.5 py-0 text-[11px] text-muted-foreground">{month.logs.length}</span>
                         </button>
 
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 px-2 text-[#8b949e] hover:bg-white/[0.05] hover:text-[#d4d4d4]"
+                          className="h-7 px-2 text-muted-foreground hover:bg-[var(--surface-2)] hover:text-foreground"
                           title="Download Worklogs"
                           onClick={(e) => handleDownload(e, month.monthKey)}
                           disabled={downloadingMonth === month.monthKey}
                         >
                           {downloadingMonth === month.monthKey ? (
-                            <div className="h-3.5 w-3.5 animate-spin rounded-full border border-[#007acc] border-t-transparent" />
+                              <div className="h-3.5 w-3.5 animate-spin rounded-full border border-primary border-t-transparent" />
                           ) : (
                             <Download className="h-4 w-4" />
                           )}
@@ -390,21 +390,21 @@ export default function WorkLogPanel({
                               }}
                               className={`px-3 py-2 transition-colors ${
                                 isActiveLog
-                                  ? "bg-[#22262b] shadow-[inset_2px_0_0_0_#2f81f7]"
+                                  ? "bg-[var(--primary-soft)] shadow-[inset_3px_0_0_0_var(--primary)]"
                                   : isActive
-                                    ? "bg-[#1f2226]"
-                                    : "bg-[#1b1d20] hover:bg-[#1f2226]"
-                              }`}
+                                    ? "bg-[var(--surface-1)]"
+                                    : "bg-[var(--surface-canvas)] hover:bg-[var(--surface-1)]"
+                               }`}
                               onClick={() => {
                                 setActiveLogId(log.id);
                                 onMonthSelect?.(month.monthKey);
                               }}
                             >
                               <div className="mb-1 flex items-center justify-between gap-3">
-                                <span className="text-[11px] uppercase tracking-[0.16em] text-[#6e7681]">{formatBubbleDate(log.date)}</span>
+                                <span className="text-[11px] uppercase tracking-[0.16em] text-[var(--ink-faint)]">{formatBubbleDate(log.date)}</span>
                                 {savingLogs[log.id] && (
-                                  <div className="flex items-center gap-1 text-[10px] text-[#6e7681]">
-                                    <div className="h-2.5 w-2.5 animate-spin rounded-full border border-[#007acc] border-t-transparent" />
+                                  <div className="flex items-center gap-1 text-[10px] text-[var(--ink-faint)]">
+                                    <div className="h-2.5 w-2.5 animate-spin rounded-full border border-primary border-t-transparent" />
                                     <span>Saving</span>
                                   </div>
                                 )}
@@ -418,7 +418,7 @@ export default function WorkLogPanel({
                                 value={value}
                                 onChange={(e) => handleEditChange(log.id, e.target.value)}
                                 onFocus={() => setActiveLogId(log.id)}
-                                className={`min-h-[58px] w-full resize-none bg-transparent px-0 py-1 font-mono text-[13px] leading-6 text-[#d4d4d4] outline-none transition-opacity placeholder:text-[#5f6772] ${
+                                className={`min-h-[58px] w-full resize-none bg-transparent px-0 py-1 font-mono text-[13px] leading-6 text-foreground outline-none transition-opacity placeholder:text-[var(--ink-faint)] ${
                                   savingLogs[log.id] ? "opacity-80" : ""
                                 }`}
                                 placeholder="What did you work on?"
@@ -437,13 +437,13 @@ export default function WorkLogPanel({
           <div ref={bottomRef} className="h-4" />
         </div>
 
-        <form onSubmit={handleAddLog} className="shrink-0 bg-[#18181a]/95 px-2 py-2 backdrop-blur sm:px-3">
-          <div className="flex items-end gap-2 bg-[#202225] px-2 py-2">
+        <form onSubmit={handleAddLog} className="paper-topbar shrink-0 border-t border-border px-2 py-2 backdrop-blur sm:px-3">
+          <div className="paper-panel flex items-end gap-2 rounded-xl px-2 py-2">
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="h-10 shrink-0 bg-[#17181b] px-2 text-sm text-[#d4d4d4] outline-none focus:ring-1 focus:ring-[#007acc]"
+              className="h-10 shrink-0 rounded-md border border-input bg-input px-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-ring"
             />
 
             <textarea
@@ -455,7 +455,7 @@ export default function WorkLogPanel({
               }}
               placeholder="Write your work log. Enter for newline, Shift+Enter to submit."
               rows={1}
-              className="max-h-[180px] min-h-[40px] flex-1 resize-none bg-[#17181b] px-3 py-2 font-mono text-[13px] leading-6 text-[#d4d4d4] outline-none placeholder:text-[#5f6772] focus:ring-1 focus:ring-[#007acc]"
+              className="max-h-[180px] min-h-[40px] flex-1 resize-none rounded-md border border-input bg-input px-3 py-2 font-mono text-[13px] leading-6 text-foreground outline-none placeholder:text-[var(--ink-faint)] focus:ring-1 focus:ring-ring"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && e.shiftKey) {
                   e.preventDefault();
@@ -467,7 +467,7 @@ export default function WorkLogPanel({
             <Button
               type="submit"
               disabled={!content.trim() || isLoading}
-              className="h-10 bg-[#007acc] px-4 text-sm font-medium text-white hover:bg-[#0a84d6]"
+              className="h-10 px-4 text-sm font-medium"
             >
               Add
             </Button>

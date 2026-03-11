@@ -782,38 +782,16 @@ export default function JournalDetailPage() {
   }
 
   return (
-    <div
-      className={`${bodyFont.className} ${headingFont.variable} min-h-screen bg-background text-foreground overflow-hidden`}
-      style={{
-        "--background": "#1e1e1e",
-        "--foreground": "#d4d4d4",
-        "--card": "#252526",
-        "--card-foreground": "#d4d4d4",
-        "--popover": "#252526",
-        "--popover-foreground": "#d4d4d4",
-        "--primary": "#007acc",
-        "--primary-foreground": "#ffffff",
-        "--secondary": "#2d2d30",
-        "--secondary-foreground": "#d4d4d4",
-        "--muted": "#2a2a2d",
-        "--muted-foreground": "#9da1a6",
-        "--accent": "#2d2d30",
-        "--accent-foreground": "#d4d4d4",
-        "--destructive": "#f48771",
-        "--border": "#3c3c3c",
-        "--input": "#3c3c3c",
-        "--ring": "#007acc",
-      }}
-    >
+    <div className={`${bodyFont.className} ${headingFont.variable} paper-shell min-h-screen overflow-hidden text-foreground`}>
       {showTopNavbar && (
-      <header className="sticky top-0 z-40 bg-[#1e1e1e]/95 backdrop-blur">
+      <header className="paper-topbar sticky top-0 z-40 border-b border-border backdrop-blur">
         <div className="mx-auto flex h-16 w-full max-w-[1600px] items-center justify-between px-3 sm:px-4">
           <div className="flex w-[180px] items-center justify-start">
             <Link href="/" className="inline-flex items-center gap-2.5">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[#3c3c3c] bg-[#252526] text-xs font-semibold text-[#9cdcfe]">
+              <span className="paper-logo-badge inline-flex h-8 w-8 items-center justify-center rounded-md text-xs font-semibold">
                 mf
               </span>
-              <span className="font-[var(--font-heading)] text-lg tracking-tight text-[#e8e8e8]">
+              <span className="font-[var(--font-heading)] text-lg tracking-tight text-[var(--ink-strong)]">
                 my future me
               </span>
             </Link>
@@ -826,17 +804,17 @@ export default function JournalDetailPage() {
             <button
               type="button"
               onClick={() => setIsMenuOpen((prev) => !prev)}
-              className="inline-flex h-9 items-center gap-2 rounded-md border border-[#3c3c3c] bg-[#252526] px-4 text-sm font-medium text-[#d4d4d4] transition-colors hover:bg-[#2d2d30]"
+              className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-[var(--surface-2)]"
               aria-expanded={isMenuOpen}
             >
-              <Menu className="h-4 w-4 text-[#9cdcfe]" />
+              <Menu className="h-4 w-4 text-primary" />
               Menu
               <ChevronDown className="h-4 w-4" />
             </button>
 
             {isMenuOpen && (
-              <div className="absolute top-12 w-[min(94vw,560px)] overflow-hidden rounded-xl border border-[#3c3c3c] bg-[#252526] shadow-2xl shadow-black/40">
-                <div className="border-b border-[#3c3c3c] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#9da1a6]">
+              <div className="paper-panel absolute top-12 w-[min(94vw,560px)] overflow-hidden rounded-xl">
+                <div className="border-b border-border px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                   Navigation
                 </div>
                 <div className="max-h-[60vh] overflow-y-auto py-1">
@@ -847,18 +825,18 @@ export default function JournalDetailPage() {
                       <Link
                         key={item.title}
                         href={item.href}
-                        className={`block border-b border-[#303030] px-4 py-3 transition-colors last:border-b-0 ${isActive ? "bg-[#2d2d30]" : "hover:bg-[#2d2d30]"}`}
+                        className={`block border-b border-border px-4 py-3 transition-colors last:border-b-0 ${isActive ? "bg-[var(--surface-2)]" : "hover:bg-[var(--surface-2)]"}`}
                         onClick={() => setIsMenuOpen(false)}
                       >
                         <div className="flex items-start gap-3">
-                          <span className="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-md border border-[#3c3c3c] bg-[#1f1f1f] text-[#9cdcfe]">
+                          <span className="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-md border border-border bg-[var(--surface-1)] text-primary">
                             <Icon className="h-4 w-4" />
                           </span>
                           <div>
-                            <div className="text-sm font-medium text-[#e8e8e8]">
+                            <div className="text-sm font-medium text-[var(--ink-strong)]">
                               {item.title}
                             </div>
-                            <div className="mt-0.5 text-xs text-[#9da1a6]">
+                            <div className="mt-0.5 text-xs text-muted-foreground">
                               {item.description}
                             </div>
                           </div>
@@ -878,26 +856,26 @@ export default function JournalDetailPage() {
             <button
               type="button"
               onClick={() => setIsUserMenuOpen((prev) => !prev)}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#3c3c3c] bg-[#252526] text-sm font-semibold text-[#9cdcfe] transition-colors hover:bg-[#2d2d30]"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-sm font-semibold text-primary transition-colors hover:bg-[var(--surface-2)]"
               aria-expanded={isUserMenuOpen}
             >
               {userInitial}
             </button>
 
             {isUserMenuOpen && (
-              <div className="absolute right-0 top-12 w-64 rounded-xl border border-[#3c3c3c] bg-[#252526] p-1 shadow-2xl shadow-black/40">
-                <div className="border-b border-[#3c3c3c] px-3 py-2">
-                  <p className="truncate text-sm font-medium text-[#e8e8e8]">
+              <div className="paper-panel absolute right-0 top-12 w-64 rounded-xl p-1">
+                <div className="border-b border-border px-3 py-2">
+                  <p className="truncate text-sm font-medium text-[var(--ink-strong)]">
                     {user?.name || "User"}
                   </p>
-                  <p className="truncate text-xs text-[#9da1a6]">
+                  <p className="truncate text-xs text-muted-foreground">
                     {user?.email || ""}
                   </p>
                 </div>
                 <Button
                   type="button"
                   variant="ghost"
-                  className="mt-1 h-9 w-full justify-start gap-2 rounded-md px-3 text-sm text-[#f48771] hover:bg-[#3a1717] hover:text-[#ffb4a5]"
+                  className="mt-1 h-9 w-full justify-start gap-2 rounded-md px-3 text-sm text-destructive hover:bg-[var(--danger-soft)] hover:text-destructive"
                   onClick={logout}
                 >
                   <LogOut className="h-4 w-4" />
@@ -911,28 +889,28 @@ export default function JournalDetailPage() {
       )}
 
       <main className={`${showTopNavbar ? "h-[calc(100vh-64px)]" : "h-screen"} w-screen`}>
-        <div className="grid h-full grid-cols-2 gap-0 overflow-hidden bg-[#1b1b1d] px-2 pb-2">
-          <section className="grid min-h-0 grid-rows-[auto_1fr_1fr] gap-0 overflow-hidden bg-[#1b1b1d]">
-            <div className="flex items-center justify-between bg-[#202225] px-3 py-2 h-14">
+        <div className="grid h-full grid-cols-2 gap-3 overflow-hidden px-3 pb-3 pt-2">
+          <section className="paper-panel grid min-h-0 grid-rows-[auto_1fr_1fr] gap-0 overflow-hidden rounded-2xl">
+            <div className="flex h-14 items-center justify-between border-b border-border bg-card px-3 py-2">
               <div className="flex min-w-0 items-center gap-2">
                 <Link
                   href="/a/journal"
-                  className="inline-flex h-8 w-8 items-center justify-center bg-[#17181b] text-[#9da1a6] hover:bg-[#2d2d30]"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-[var(--surface-1)] text-muted-foreground hover:bg-[var(--surface-2)]"
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </Link>
                 <div className="min-w-0">
-                  <h1 className="truncate text-sm font-semibold text-[#e8e8e8]">
+                  <h1 className="truncate text-sm font-semibold text-[var(--ink-strong)]">
                     {journal.title}
                   </h1>
                   <div className="flex items-center gap-1.5">
-                    <p className="truncate text-xs text-[#8f9397]">
+                    <p className="truncate text-xs text-muted-foreground">
                       {journal.video_url}
                     </p>
                     <button
                       type="button"
                       onClick={handleCopyVideoUrl}
-                      className="inline-flex h-5 w-5 shrink-0 items-center justify-center bg-[#17181b] text-[#9da1a6] hover:bg-[#2d2d30]"
+                      className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded bg-[var(--surface-1)] text-muted-foreground hover:bg-[var(--surface-2)]"
                       title="Copy video URL"
                     >
                       {isUrlCopied ? (
@@ -970,7 +948,7 @@ export default function JournalDetailPage() {
               </Button>
             </div>
 
-            <div className="overflow-hidden bg-black">
+            <div className="overflow-hidden bg-[var(--surface-1)]">
               <ReactPlayer
                 src={journal.video_url}
                 width="100%"
@@ -989,16 +967,16 @@ export default function JournalDetailPage() {
               />
             </div>
 
-            <div className="min-h-0 overflow-hidden bg-[#1f1f1f]">
-              <div className="flex items-center justify-between bg-[#202225] px-3 py-2">
+            <div className="min-h-0 overflow-hidden bg-[var(--surface-canvas)]">
+              <div className="flex items-center justify-between border-t border-border bg-card px-3 py-2">
                 <div className="flex items-center gap-1.5">
                   <button
                     type="button"
                     onClick={() => setDetailTab("info")}
                     className={`inline-flex h-7 items-center px-2 text-[11px] font-semibold ${
                       detailTab === "info"
-                        ? "bg-[#26313d] text-[#dcefff] shadow-[inset_2px_0_0_0_#2f81f7]"
-                        : "bg-[#17181b] text-[#9da1a6] hover:bg-[#2d2d30]"
+                        ? "bg-[var(--surface-3)] text-primary shadow-[inset_3px_0_0_0_var(--primary)]"
+                        : "bg-[var(--surface-1)] text-muted-foreground hover:bg-[var(--surface-2)]"
                     }`}
                   >
                     Info
@@ -1008,8 +986,8 @@ export default function JournalDetailPage() {
                     onClick={() => setDetailTab("captions")}
                     className={`inline-flex h-7 items-center px-2 text-[11px] font-semibold ${
                       detailTab === "captions"
-                        ? "bg-[#26313d] text-[#dcefff] shadow-[inset_2px_0_0_0_#2f81f7]"
-                        : "bg-[#17181b] text-[#9da1a6] hover:bg-[#2d2d30]"
+                        ? "bg-[var(--surface-3)] text-primary shadow-[inset_3px_0_0_0_var(--primary)]"
+                        : "bg-[var(--surface-1)] text-muted-foreground hover:bg-[var(--surface-2)]"
                     }`}
                   >
                     Captions
@@ -1020,7 +998,7 @@ export default function JournalDetailPage() {
                     type="button"
                     onClick={handleRefreshTranscript}
                     disabled={isRefreshingTranscript}
-                    className="inline-flex h-7 items-center gap-1 bg-[#17181b] px-2 text-[11px] font-semibold text-[#9cdcfe] hover:bg-[#2d2d30] disabled:cursor-not-allowed disabled:opacity-70"
+                    className="inline-flex h-7 items-center gap-1 rounded-md bg-[var(--surface-1)] px-2 text-[11px] font-semibold text-primary hover:bg-[var(--surface-2)] disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     {isRefreshingTranscript ? (
                       <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
@@ -1037,19 +1015,19 @@ export default function JournalDetailPage() {
               >
                 {detailTab === "info" ? (
                     <div className="space-y-2">
-                      <div className="bg-[#17181b] px-3 py-2">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9da1a6]">Title</p>
-                        <p className="mt-1 text-sm text-[#e8e8e8]">{journal.video_title || "Untitled video"}</p>
+                      <div className="paper-panel-muted rounded-lg px-3 py-2">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Title</p>
+                        <p className="mt-1 text-sm text-[var(--ink-strong)]">{journal.video_title || "Untitled video"}</p>
                       </div>
-                      <div className="bg-[#17181b] px-3 py-2">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9da1a6]">Description</p>
-                      <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-[#c8c8c8]">
+                      <div className="paper-panel-muted rounded-lg px-3 py-2">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Description</p>
+                      <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-foreground">
                         {journal.video_description || "No description available."}
                       </p>
                     </div>
                   </div>
                 ) : captionSegments.length === 0 ? (
-                  <div className="bg-[#17181b] px-3 py-4 text-sm text-[#8f9397]">
+                  <div className="paper-panel-muted rounded-lg px-3 py-4 text-sm text-muted-foreground">
                     Caption data is not available for this video.
                   </div>
                 ) : (
@@ -1062,11 +1040,11 @@ export default function JournalDetailPage() {
                           ref={active ? activeCaptionRef : null}
                           className={`rounded-md border px-2.5 py-2 text-sm leading-6 transition-colors ${
                             active
-                              ? "bg-[#26313d] text-[#dcefff] shadow-[inset_2px_0_0_0_#2f81f7]"
-                              : "bg-[#17181b] text-[#c8c8c8]"
-                          }`}
-                        >
-                          <div className="mb-1 text-[11px] font-semibold text-[#9cdcfe]">
+                              ? "bg-[var(--primary-soft)] text-[var(--ink-strong)] shadow-[inset_3px_0_0_0_var(--primary)]"
+                              : "bg-[var(--surface-1)] text-foreground"
+                           }`}
+                         >
+                          <div className="mb-1 text-[11px] font-semibold text-primary">
                             {formatTime(segment.start)} -{" "}
                             {formatTime(segment.end)}
                           </div>
@@ -1080,7 +1058,7 @@ export default function JournalDetailPage() {
             </div>
           </section>
 
-          <section className="grid min-h-0 grid-rows-[1fr] overflow-hidden bg-[#1b1b1d]">
+          <section className="paper-panel grid min-h-0 grid-rows-[1fr] overflow-hidden rounded-2xl">
             <div className="h-14 overflow-y-auto w-full">
               <style>{`
                 .quill-dark { height: 100%; display: flex; flex-direction: column; border: none !important; }
@@ -1094,37 +1072,37 @@ export default function JournalDetailPage() {
                   align-items: center;
                   gap: 6px;
                 }
-                .quill-dark .ql-toolbar .ql-stroke { stroke: #d4d4d4; }
-                .quill-dark .ql-toolbar .ql-fill { fill: #d4d4d4; }
-                .quill-dark .ql-toolbar .ql-picker { color: #d4d4d4; }
+                .quill-dark .ql-toolbar .ql-stroke { stroke: var(--foreground); }
+                .quill-dark .ql-toolbar .ql-fill { fill: var(--foreground); }
+                .quill-dark .ql-toolbar .ql-picker { color: var(--foreground); }
                 .quill-dark .ql-toolbar .ql-formats { margin-right: 6px; }
                 .quill-dark .ql-toolbar button,
                 .quill-dark .ql-toolbar .ql-picker-label {
                   height: 30px;
                   border: none;
                   border-radius: 0;
-                  background: #17181b;
+                  background: var(--surface-1);
                 }
                 .quill-dark .ql-toolbar button:hover,
                 .quill-dark .ql-toolbar .ql-picker-label:hover {
-                  background: #2d2d30;
+                  background: var(--surface-2);
                 }
                 .quill-dark .ql-toolbar .ql-picker-label { padding: 0 10px; display: inline-flex; align-items: center; }
                 .quill-dark .ql-toolbar .ql-picker.ql-header { min-width: 92px; }
                 .quill-dark .ql-toolbar .ql-picker-options {
-                  background: #17181b;
+                  background: var(--card);
                   border: none;
                 }
                 .quill-dark .ql-toolbar .ql-picker-item:hover {
-                  background: #2d2d30;
-                  color: #d4d4d4;
+                  background: var(--surface-2);
+                  color: var(--foreground);
                 }
-                .quill-dark .ql-container { background: #17181b; color: #d4d4d4; border: none; flex-grow: 1; overflow-y: auto; font-family: var(--font-body); font-size: 14px; line-height: 1.6; }
+                .quill-dark .ql-container { background: var(--surface-canvas); color: var(--foreground); border: none; flex-grow: 1; overflow-y: auto; font-family: var(--font-body); font-size: 14px; line-height: 1.6; }
                 .quill-dark .ql-editor { min-height: 300px; padding: 14px; }
-                .quill-dark .ql-editor.ql-blank::before { color: #8f9397; font-style: normal; }
+                .quill-dark .ql-editor.ql-blank::before { color: var(--muted-foreground); font-style: normal; }
               `}</style>
 
-              <div className="flex items-center justify-between bg-[#202225] px-3 py-2">
+              <div className="flex items-center justify-between border-b border-border bg-card px-3 py-2">
                 <div id="journal-editor-toolbar">
                   <span className="ql-formats">
                     <select className="ql-header" defaultValue="">
@@ -1149,11 +1127,11 @@ export default function JournalDetailPage() {
                 <button
                   type="button"
                   onClick={() => setIsQuranDrawerOpen((prev) => !prev)}
-                  className={`inline-flex h-[30px] items-center gap-1.5 bg-[#17181b] px-2.5 text-[11px] font-semibold transition-colors hover:bg-[#2d2d30] ${
-                    isQuranDrawerOpen
-                      ? "text-[#9cdcfe] shadow-[inset_2px_0_0_0_#2f81f7]"
-                      : "text-[#d4d4d4]"
-                  }`}
+                    className={`inline-flex h-[30px] items-center gap-1.5 rounded-md bg-[var(--surface-1)] px-2.5 text-[11px] font-semibold transition-colors hover:bg-[var(--surface-2)] ${
+                      isQuranDrawerOpen
+                        ? "text-primary shadow-[inset_3px_0_0_0_var(--primary)]"
+                        : "text-foreground"
+                    }`}
                 >
                   <BookText className="h-4 w-4" />
                   Quran

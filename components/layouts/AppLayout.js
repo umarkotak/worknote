@@ -76,44 +76,22 @@ export default function AppLayout({ children }) {
 
   if (isLoading || !user) {
     return (
-      <div className={`${bodyFont.className} min-h-screen bg-[#1e1e1e] text-[#d4d4d4] flex items-center justify-center`}>
-        <div className="text-sm text-[#9da1a6]">Loading workspace...</div>
+      <div className={`${bodyFont.className} paper-shell flex min-h-screen items-center justify-center text-foreground`}>
+        <div className="text-sm text-muted-foreground">Loading workspace...</div>
       </div>
     );
   }
 
   return (
-    <div
-      className={`${bodyFont.className} ${headingFont.variable} min-h-screen bg-background text-foreground`}
-      style={{
-        "--background": "#1e1e1e",
-        "--foreground": "#d4d4d4",
-        "--card": "#252526",
-        "--card-foreground": "#d4d4d4",
-        "--popover": "#252526",
-        "--popover-foreground": "#d4d4d4",
-        "--primary": "#007acc",
-        "--primary-foreground": "#ffffff",
-        "--secondary": "#2d2d30",
-        "--secondary-foreground": "#d4d4d4",
-        "--muted": "#2a2a2d",
-        "--muted-foreground": "#9da1a6",
-        "--accent": "#2d2d30",
-        "--accent-foreground": "#d4d4d4",
-        "--destructive": "#f48771",
-        "--border": "#3c3c3c",
-        "--input": "#3c3c3c",
-        "--ring": "#007acc",
-      }}
-    >
-      <header className="sticky top-0 z-40 border-b border-[#3c3c3c] bg-[#1e1e1e]/95 backdrop-blur">
+    <div className={`${bodyFont.className} ${headingFont.variable} paper-shell min-h-screen text-foreground`}>
+      <header className="paper-topbar sticky top-0 z-40 border-b backdrop-blur">
         <div className="mx-auto flex h-14 w-full max-w-[1600px] items-center justify-between px-3 sm:px-4">
           <div className="flex w-[180px] items-center justify-start">
             <Link href="/a/dashboard" className="inline-flex items-center gap-2.5">
-              <span className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-[#3c3c3c] bg-[#252526] text-xs font-semibold text-[#9cdcfe]">
+              <span className="paper-logo-badge inline-flex h-7 w-7 items-center justify-center rounded-md text-xs font-semibold">
                 mf
               </span>
-              <span className="font-[var(--font-heading)] text-base tracking-tight text-[#e8e8e8]">my future me</span>
+              <span className="font-[var(--font-heading)] text-base tracking-tight text-[var(--ink-strong)]">my future me</span>
             </Link>
           </div>
 
@@ -128,9 +106,9 @@ export default function AppLayout({ children }) {
                   href={item.href}
                   className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                     isActive
-                      ? "bg-[#2d2d30] text-[#9cdcfe]"
-                      : "text-[#9da1a6] hover:bg-[#2d2d30] hover:text-[#d4d4d4]"
-                  }`}
+                      ? "bg-[var(--surface-3)] text-primary"
+                      : "text-muted-foreground hover:bg-[var(--surface-2)] hover:text-[var(--ink-strong)]"
+                   }`}
                 >
                   <Icon className="h-3.5 w-3.5" />
                   {item.title}
@@ -144,18 +122,18 @@ export default function AppLayout({ children }) {
             <button
               type="button"
               onClick={() => setIsMenuOpen((prev) => !prev)}
-              className="inline-flex h-8 items-center gap-2 rounded-md border border-[#3c3c3c] bg-[#252526] px-3 text-xs font-medium text-[#d4d4d4] transition-colors hover:bg-[#2d2d30]"
+              className="inline-flex h-8 items-center gap-2 rounded-md border border-border bg-card px-3 text-xs font-medium text-foreground transition-colors hover:bg-[var(--surface-2)]"
               aria-expanded={isMenuOpen}
               aria-label="Open navigation menu"
             >
-              <Menu className="h-3.5 w-3.5 text-[#9cdcfe]" />
+              <Menu className="h-3.5 w-3.5 text-primary" />
               Menu
               <ChevronDown className="h-3.5 w-3.5" />
             </button>
 
             {isMenuOpen && (
-              <div className="absolute top-10 w-[min(94vw,560px)] overflow-hidden rounded-xl border border-[#3c3c3c] bg-[#252526] shadow-2xl shadow-black/40">
-                <div className="border-b border-[#3c3c3c] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#9da1a6]">
+              <div className="paper-panel absolute top-10 w-[min(94vw,560px)] overflow-hidden rounded-xl">
+                <div className="border-b border-border px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                   Navigation
                 </div>
                 <div className="max-h-[60vh] overflow-y-auto py-1">
@@ -167,21 +145,21 @@ export default function AppLayout({ children }) {
                       <Link
                         key={item.title}
                         href={item.href}
-                        className={`block border-b border-[#303030] px-4 py-2.5 transition-colors last:border-b-0 ${
-                          isActive ? "bg-[#2d2d30]" : "hover:bg-[#2d2d30]"
-                        }`}
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        <div className="flex items-start gap-3">
-                          <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-md border border-[#3c3c3c] bg-[#1f1f1f] text-[#9cdcfe]">
-                            <Icon className="h-3.5 w-3.5" />
-                          </span>
-                          <div>
-                            <div className="text-sm font-medium text-[#e8e8e8]">{item.title}</div>
-                            <div className="mt-0.5 text-xs text-[#9da1a6]">{item.description}</div>
+                          className={`block border-b border-border px-4 py-2.5 transition-colors last:border-b-0 ${
+                            isActive ? "bg-[var(--surface-2)]" : "hover:bg-[var(--surface-2)]"
+                          }`}
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <div className="flex items-start gap-3">
+                            <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-md border border-border bg-[var(--surface-1)] text-primary">
+                              <Icon className="h-3.5 w-3.5" />
+                            </span>
+                            <div>
+                              <div className="text-sm font-medium text-[var(--ink-strong)]">{item.title}</div>
+                              <div className="mt-0.5 text-xs text-muted-foreground">{item.description}</div>
+                            </div>
                           </div>
-                        </div>
-                      </Link>
+                        </Link>
                     );
                   })}
                 </div>
@@ -193,7 +171,7 @@ export default function AppLayout({ children }) {
             <button
               type="button"
               onClick={() => setIsUserMenuOpen((prev) => !prev)}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#3c3c3c] bg-[#252526] text-xs font-semibold text-[#9cdcfe] transition-colors hover:bg-[#2d2d30]"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-xs font-semibold text-primary transition-colors hover:bg-[var(--surface-2)]"
               aria-expanded={isUserMenuOpen}
               aria-label="Open user menu"
             >
@@ -201,15 +179,15 @@ export default function AppLayout({ children }) {
             </button>
 
             {isUserMenuOpen && (
-              <div className="absolute right-0 top-10 w-56 rounded-xl border border-[#3c3c3c] bg-[#252526] p-1 shadow-2xl shadow-black/40">
-                <div className="border-b border-[#3c3c3c] px-3 py-2">
-                  <p className="truncate text-sm font-medium text-[#e8e8e8]">{user?.name || "User"}</p>
-                  <p className="truncate text-xs text-[#9da1a6]">{user?.email || ""}</p>
+              <div className="paper-panel absolute right-0 top-10 w-56 rounded-xl p-1">
+                <div className="border-b border-border px-3 py-2">
+                  <p className="truncate text-sm font-medium text-[var(--ink-strong)]">{user?.name || "User"}</p>
+                  <p className="truncate text-xs text-muted-foreground">{user?.email || ""}</p>
                 </div>
                 <Button
                   type="button"
                   variant="ghost"
-                  className="mt-1 h-8 w-full justify-start gap-2 rounded-md px-3 text-sm text-[#f48771] hover:bg-[#3a1717] hover:text-[#ffb4a5]"
+                  className="mt-1 h-8 w-full justify-start gap-2 rounded-md px-3 text-sm text-destructive hover:bg-[var(--danger-soft)] hover:text-destructive"
                   onClick={logout}
                 >
                   <LogOut className="h-4 w-4" />

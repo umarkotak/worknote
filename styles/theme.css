@@ -1,0 +1,258 @@
+/* Central theme source: update this file to reskin the app. */
+
+:root,
+.theme-paper {
+  color-scheme: light;
+
+  --paper-1: #f6eee3;
+  --paper-2: #eee7d7;
+  --paper-3: #e5decf;
+  --paper-4: #e5cbba;
+  --paper-5: #d9bda5;
+
+  --ink-strong: #443127;
+  --ink-base: #5c4437;
+  --ink-soft: #82685a;
+  --ink-faint: #9b806f;
+
+  --background: var(--paper-1);
+  --foreground: var(--ink-base);
+  --card: #fbf5ec;
+  --card-foreground: var(--ink-base);
+  --popover: #fffaf3;
+  --popover-foreground: var(--ink-base);
+  --primary: #9a6f50;
+  --primary-foreground: #fffaf4;
+  --secondary: var(--paper-2);
+  --secondary-foreground: var(--ink-base);
+  --muted: var(--paper-3);
+  --muted-foreground: var(--ink-soft);
+  --accent: var(--paper-4);
+  --accent-foreground: var(--ink-strong);
+  --destructive: #b15c45;
+  --border: rgba(92, 68, 55, 0.16);
+  --input: #f8f1e7;
+  --ring: rgba(154, 111, 80, 0.35);
+  --chart-1: #9a6f50;
+  --chart-2: #b98967;
+  --chart-3: #7f5c49;
+  --chart-4: #c79b7b;
+  --chart-5: #d9bda5;
+  --sidebar: #f8f1e7;
+  --sidebar-foreground: var(--ink-base);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--paper-4);
+  --sidebar-accent-foreground: var(--ink-strong);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+
+  --surface-canvas: #fcf6ee;
+  --surface-1: var(--paper-2);
+  --surface-2: var(--paper-3);
+  --surface-3: var(--paper-4);
+  --surface-4: var(--paper-5);
+  --primary-strong: #8e6345;
+  --primary-soft: #edd8c7;
+  --primary-edge: rgba(122, 86, 62, 0.28);
+  --success: #6f8c67;
+  --warning: #b7855d;
+  --info: #8a6246;
+  --danger-soft: #f1ddd4;
+  --shadow-color: rgba(100, 72, 54, 0.14);
+  --shadow-lg: 0 18px 45px -28px var(--shadow-color);
+  --shadow-md: 0 10px 24px -18px var(--shadow-color);
+  --shadow-sm: 0 1px 0 rgba(104, 76, 58, 0.08);
+  --hero-wash: radial-gradient(circle at top left, rgba(217, 189, 165, 0.34), transparent 36%),
+    radial-gradient(circle at 88% 12%, rgba(229, 203, 186, 0.42), transparent 30%),
+    linear-gradient(180deg, rgba(255, 251, 245, 0.98), rgba(246, 238, 227, 0.92));
+}
+
+body {
+  background:
+    radial-gradient(circle at top, rgba(229, 203, 186, 0.26), transparent 32%),
+    linear-gradient(180deg, rgba(255, 251, 245, 0.88), rgba(246, 238, 227, 1));
+  color: var(--foreground);
+}
+
+::selection {
+  background: rgba(154, 111, 80, 0.2);
+  color: var(--ink-strong);
+}
+
+.paper-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 14% 0%, rgba(217, 189, 165, 0.26), transparent 28%),
+    radial-gradient(circle at 84% 0%, rgba(229, 203, 186, 0.32), transparent 22%),
+    linear-gradient(180deg, rgba(255, 251, 245, 0.95), rgba(246, 238, 227, 1));
+}
+
+.paper-topbar {
+  background: rgba(250, 244, 236, 0.88);
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.paper-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+}
+
+.paper-panel-muted {
+  background: var(--surface-1);
+  border: 1px solid rgba(92, 68, 55, 0.1);
+}
+
+.paper-panel-soft {
+  background: var(--surface-2);
+  border: 1px solid rgba(92, 68, 55, 0.08);
+}
+
+.paper-kicker {
+  color: var(--info);
+  background: rgba(229, 203, 186, 0.55);
+  border: 1px solid rgba(154, 111, 80, 0.18);
+}
+
+.paper-link {
+  color: var(--primary);
+}
+
+.paper-link:hover {
+  color: var(--primary-strong);
+}
+
+.paper-logo-badge {
+  background: linear-gradient(180deg, #fffaf2, #eadbc9);
+  border: 1px solid rgba(154, 111, 80, 0.18);
+  color: var(--primary);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.paper-editor {
+  background: #fcf7f0;
+  border: 1px solid rgba(92, 68, 55, 0.1);
+}
+
+.paper-danger {
+  background: var(--danger-soft);
+  border: 1px solid rgba(177, 92, 69, 0.2);
+  color: var(--destructive);
+}
+
+/* Compatibility layer for existing hardcoded utility classes. */
+[class~="bg-[#1e1e1e]"],
+[class~="bg-[#1b1b1d]"],
+[class~="bg-[#17181b]"] {
+  background-color: var(--background) !important;
+}
+
+[class~="bg-[#1f1f1f]"],
+[class~="bg-[#202225]"],
+[class~="bg-[#252526]"],
+[class~="bg-[#252526]/85"],
+[class~="bg-[#252526]/90"],
+[class~="bg-[#252526]/95"] {
+  background-color: var(--card) !important;
+}
+
+[class~="bg-[#2a2a2d]"],
+[class~="bg-[#2d2d30]"],
+[class~="bg-[#1f2226]"],
+[class~="bg-[#23262b]"] {
+  background-color: var(--surface-2) !important;
+}
+
+[class~="bg-[#26313d]"],
+[class~="bg-[#20303b]"],
+[class~="bg-[#0f2f45]"],
+[class~="bg-[#0e3550]/45"] {
+  background-color: var(--primary-soft) !important;
+}
+
+[class~="bg-[#331b1b]"],
+[class~="bg-[#3a1717]"] {
+  background-color: var(--danger-soft) !important;
+}
+
+[class~="bg-[#007acc]"] {
+  background-color: var(--primary) !important;
+}
+
+[class~="hover:bg-[#0e639c]"]:hover {
+  background-color: var(--primary-strong) !important;
+}
+
+[class~="hover:bg-[#2d2d30]"]:hover,
+[class~="hover:bg-[#2a2a2d]"]:hover,
+[class~="hover:bg-[#2a2d31]"]:hover,
+[class~="hover:bg-[#412020]"]:hover,
+[class~="hover:bg-white/[0.05]"]:hover {
+  background-color: var(--surface-2) !important;
+}
+
+[class~="border-[#3c3c3c]"],
+[class~="border-[#303030]"],
+[class~="border-[#313131]"],
+[class~="border-[#4d4d4d]"],
+[class~="border-[#5a1d1d]"] {
+  border-color: var(--border) !important;
+}
+
+[class~="text-[#d4d4d4]"],
+[class~="text-[#c8c8c8]"],
+[class~="text-[#e8e8e8]"],
+[class~="text-[#f1f3f5]"],
+[class~="text-[#f2f2f2]"],
+[class~="text-[#f3f3f3]"],
+[class~="text-white"] {
+  color: var(--foreground) !important;
+}
+
+[class~="text-[#9da1a6]"],
+[class~="text-[#8f9397]"],
+[class~="text-[#8f979f]"],
+[class~="text-[#8b949e]"],
+[class~="text-[#6e7681]"],
+[class~="text-[#5f6772]"],
+[class~="text-[#aeb6bf]"],
+[class~="text-[#b4b4b4]"] {
+  color: var(--muted-foreground) !important;
+}
+
+[class~="text-[#9cdcfe]"],
+[class~="text-[#c5e7ff]"],
+[class~="text-[#dcefff]"],
+[class~="text-[#eaf6ff]"],
+[class~="text-[#2f81f7]"] {
+  color: var(--primary) !important;
+}
+
+[class~="text-[#4ec9b0]"] {
+  color: var(--success) !important;
+}
+
+[class~="text-[#f48771]"],
+[class~="text-[#ffb4a5]"] {
+  color: var(--destructive) !important;
+}
+
+[class~="text-[#f7be4a]"],
+[class~="text-[#ffe0a3]"],
+[class~="text-[#ce9178]"] {
+  color: var(--warning) !important;
+}
+
+[class~="hover:text-white"]:hover,
+[class~="hover:text-[#d4d4d4]"]:hover,
+[class~="hover:text-[#c5e7ff]"]:hover {
+  color: var(--ink-strong) !important;
+}
+
+[class~="bg-[linear-gradient(180deg,_rgba(0,122,204,0.12),_rgba(31,31,31,0.95))]"],
+[class~="bg-[radial-gradient(circle_at_top_left,_rgba(0,122,204,0.28),_transparent_40%),linear-gradient(135deg,_rgba(32,32,32,0.96),_rgba(18,18,18,0.96))]"],
+[class~="bg-[radial-gradient(circle_at_top_right,_rgba(245,158,11,0.2),_transparent_38%),linear-gradient(180deg,_rgba(30,30,30,0.98),_rgba(37,37,38,0.98))]"] {
+  background-image: var(--hero-wash) !important;
+}
